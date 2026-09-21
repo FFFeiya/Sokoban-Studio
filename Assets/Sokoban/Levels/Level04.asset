@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9eb8107d3bfd48941828e07bedd43ec2, type: 3}
+  m_Name: Level04
+  m_EditorClassIdentifier: 
+  levelName: 空间规划
+  width: 8
+  height: 8
+  cells: 01010101010101010100020000020001010000000000000101000000000000010100010101010001010000000000000101000000000000010101010101010101
+  occupants: 00000000000000000000000000000000000000020200000000000000000000000000000000000000000000000000000000000001000000000000000000000000
