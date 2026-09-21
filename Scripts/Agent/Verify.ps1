@@ -169,7 +169,7 @@ function Run-Release {
     Run-Gate
 
     New-Item -ItemType Directory -Force -Path $BuildDir | Out-Null
-    $exe = Join-Path $BuildDir "Sokoban Studio.exe"
+    $exe = Join-Path $BuildDir "Sokoban-Studio.exe"
     $log = Join-Path $LogDir "release-build.log"
 
     $args = @(
