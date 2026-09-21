@@ -18,7 +18,7 @@
 
 本工具集包含完整的推箱子玩法，以及面向设计师的关卡制作工作流——**制作 → 校验 → 保存 → 一键试玩**——它与正式发行的游戏使用同一套运行时规则。
 
-权威规则系统是确定性的整数网格 `Board`：`TryMove` 决定每一次移动与推箱，物理从不决定推箱的合法性。运行时代码从不依赖 `UnityEditor` 或 `AssetDatabase`，已发行关卡通过显式序列化的 `LevelCatalog` 加载而非资源发现。针对 Unity **2022.3.62f3**（精确版本）构建。
+权威规则系统是确定性的整数网格 `Board`：`TryMove` 决定每一次移动与推箱，物理从不决定推箱的合法性。运行时代码从不依赖 `UnityEditor` 或 `AssetDatabase`，已发行关卡通过显式序列化的 `LevelCatalog` 加载而非资源发现。针对 Unity **2022.3.51f1**（精确版本）构建。
 
 ## 为什么做这个项目
 
@@ -29,7 +29,7 @@
 
 ## 如何游玩
 
-1. 使用 Unity **2022.3.62f3** 打开项目。
+1. 使用 Unity **2022.3.51f1** 打开项目。
 2. 打开 `Assets/Sokoban/Scenes/MainMenu.unity`。
 3. 按下 **Play**。
 4. 依次进入 **Menu → Level Select → Gameplay**。
@@ -177,7 +177,7 @@ Assets/Sokoban/
 
 | 层级 | 作用 | 当前证据 |
 | --- | --- | --- |
-| **Fast** | 断言项目版本为 2022.3.62f3，以批处理模式启动 Unity 以强制脚本导入/编译，并在出现编译器错误时失败。 | 编译干净。 |
+| **Fast** | 断言项目版本为 2022.3.51f1，以批处理模式启动 Unity 以强制脚本导入/编译，并在出现编译器错误时失败。 | 编译干净。 |
 | **Gate** | 运行 Fast，随后运行 EditMode 测试，再运行 PlayMode 测试（当 PlayMode 目录存在时），解析 Unity Test Framework XML。 | EditMode **190/190 passed**，PlayMode **4/4 passed**。 |
 | **Release** | 运行 Gate，随后构建 Windows x64 独立版本并要求产物存在。 | 基线为绿；产物 `Build/Sokoban Studio.exe`。 |
 

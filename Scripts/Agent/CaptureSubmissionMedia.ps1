@@ -52,7 +52,7 @@ param(
     [switch]$NoLaunch,
 
     # Unity editor executable (overridable for testing).
-    [string]$UnityPath = 'C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Unity.exe',
+    [string]$UnityPath = 'C:\Program Files\Unity\Hub\Editor\2022.3.51f1\Editor\Unity.exe',
 
     # Unity project path (overridable for testing). Defaults to the repository root.
     [string]$ProjectPath,
@@ -347,7 +347,7 @@ try {
 
     if (-not $Validate) {
         if (-not (Test-Path -LiteralPath $UnityPath -PathType Leaf)) {
-            Fail-Preflight "Unity Editor not found at '$UnityPath' (expected 2022.3.62f3)"
+            Fail-Preflight "Unity Editor not found at '$UnityPath' (expected 2022.3.51f1)"
         }
     }
 

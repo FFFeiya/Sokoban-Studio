@@ -53,7 +53,7 @@ Sokoban Studio 是一个 **Unity 技术策划项目**。表面上它是一套完
 - **一套规则，两类使用者**：编辑器与运行时镜像同一套规则（`LevelValidator` / `LevelAnalyzer` vs 运行时 `Board` 加载时强制的不变量），互相吻合。
 - **运行时不依赖 `UnityEditor` 或 `AssetDatabase`**；已发行关卡通过显式序列化的 `LevelCatalog` 加载，而非资源发现。
 - **运行时从不修改 `LevelDefinition`**。
-- 针对 **Unity 2022.3.62f3**（精确版本）构建。
+- 针对 **Unity 2022.3.51f1**（精确版本）构建。
 
 ## 验证
 
