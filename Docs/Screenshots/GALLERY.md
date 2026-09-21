@@ -2,7 +2,7 @@
 
 自动生成 by `Scripts/Agent/CaptureSubmissionMedia.ps1`；共 10 张稳定文件名截图。
 
-- Generated: 2026-09-21T12:08:54.6465926-06:00
+- Generated: 2026-09-21T16:22:31.5851830-06:00
 
 ## Runtime
 

@@ -6,7 +6,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$ExpectedVersion = "2022.3.62f3"
+$ExpectedVersion = "2022.3.51f1"
 
 if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
     $ProjectPath = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
