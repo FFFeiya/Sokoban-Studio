@@ -16,6 +16,8 @@
 ![关卡编辑器与解法预览](Docs/Screenshots/editor-solution-preview.png)
 <!-- AUTO:HERO_EDITOR:END -->
 
+**设计说明 / Case Study：** [Sokoban Studio：从推箱子到关卡生产工具链](https://FFFeiya.github.io/2026/09/21/sokoban-studio/)
+
 本工具集包含完整的推箱子玩法，以及面向设计师的关卡制作工作流——**制作 → 校验 → 保存 → 一键试玩**——它与正式发行的游戏使用同一套运行时规则。
 
 权威规则系统是确定性的整数网格 `Board`：`TryMove` 决定每一次移动与推箱，物理从不决定推箱的合法性。运行时代码从不依赖 `UnityEditor` 或 `AssetDatabase`，已发行关卡通过显式序列化的 `LevelCatalog` 加载而非资源发现。针对 Unity **2022.3.51f1**（精确版本）构建。
