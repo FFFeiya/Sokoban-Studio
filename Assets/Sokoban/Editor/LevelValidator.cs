@@ -5,10 +5,11 @@ using System.Linq;
 namespace Sokoban.Editor
 {
     /// <summary>
-    /// Single source of truth for the P0 Sokoban level rules, shared by the level editor and the
-    /// one-click playtest so both agree on what "valid" means. It reports every problem it can find
-    /// (with coordinates where applicable) and never throws for malformed input; a final
-    /// <see cref="Board"/> construction catches malformed states the field checks miss.
+    /// Authoring/playtest validation entry point for the P0 Sokoban level rules, shared by the
+    /// level editor and the one-click playtest so both agree on what "valid" means. It reports every
+    /// problem it can find (with coordinates where applicable) and never throws for malformed input.
+    /// <see cref="Board"/> independently enforces the runtime safety invariants when it is
+    /// constructed, so malformed data that bypasses this validator still cannot enter gameplay.
     /// </summary>
     public static class LevelValidator
     {

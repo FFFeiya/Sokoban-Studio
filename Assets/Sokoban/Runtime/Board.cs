@@ -67,9 +67,9 @@ namespace Sokoban
         private int _moveCount;
         private int _pushCount;
 
-        // When a door's group has no plate tiles, its doors are treated as permanently open so that
-        // hypothetical plate-less door content still plays. Shipped levels have neither plates nor
-        // doors, so their behavior is identical to before the plate/door mechanic existed.
+        // When a door group has no plate tiles, that group's doors use the configured plate-less
+        // fallback (open). This preserves compatibility for levels that do not author a matching
+        // plate group.
         private bool _openDoorsWhenNoPlates = true;
 
         public Board(LevelDefinition def)
@@ -112,6 +112,8 @@ namespace Sokoban
             _groupIds = new int[cellCount];
 
             int playerCount = 0;
+            int boxCount = 0;
+            int goalCount = 0;
             int playerX = -1;
             int playerY = -1;
 
@@ -121,6 +123,11 @@ namespace Sokoban
                 OccupantType occupant = def.occupants[i];
                 _tiles[i] = tile;
                 _groupIds[i] = def.GetGroupId(i);
+
+                if (tile == TileType.Goal)
+                {
+                    goalCount++;
+                }
 
                 if (tile == TileType.Wall && occupant != OccupantType.None)
                 {
@@ -144,6 +151,7 @@ namespace Sokoban
                         playerY = i / _width;
                         break;
                     case OccupantType.Box:
+                        boxCount++;
                         _boxAt[i] = true;
                         break;
                 }
@@ -153,6 +161,23 @@ namespace Sokoban
             {
                 throw new ArgumentException(
                     $"Level must contain exactly one player, but found {playerCount}.",
+                    nameof(def));
+            }
+
+            if (boxCount <= 0)
+            {
+                throw new ArgumentException("Level must contain at least one box.", nameof(def));
+            }
+
+            if (goalCount <= 0)
+            {
+                throw new ArgumentException("Level must contain at least one goal.", nameof(def));
+            }
+
+            if (boxCount != goalCount)
+            {
+                throw new ArgumentException(
+                    $"Level must contain the same number of boxes and goals, but found {boxCount} box(es) and {goalCount} goal(s).",
                     nameof(def));
             }
 
@@ -236,7 +261,7 @@ namespace Sokoban
         /// <summary>
         /// True when the board contains at least one pressure-plate tile. When this is false the
         /// derived door rule has no plate group to evaluate and falls back to the configured
-        /// plate-less default (doors open), so shipped plate-less boards are unchanged.
+        /// plate-less default (doors open), so levels without plate/door content are unchanged.
         /// </summary>
         public bool HasPlateTiles
         {

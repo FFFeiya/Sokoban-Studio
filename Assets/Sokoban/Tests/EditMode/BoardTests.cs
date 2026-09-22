@@ -140,9 +140,10 @@ namespace Sokoban.Tests
         public void MoveIntoFloor_Succeeds()
         {
             var board = new Board(MakeLevel(
-                "###",
-                "#P.",
-                "#G#"));
+                "#####",
+                "#P.G#",
+                "#.B.#",
+                "#####"));
 
             bool moved = board.TryMove(Direction.Right);
 
@@ -150,7 +151,7 @@ namespace Sokoban.Tests
             AssertPlayerAt(board, 2, 1);
             Assert.AreEqual(1, board.MoveCount);
             Assert.AreEqual(0, board.PushCount);
-            Assert.AreEqual(0, board.BoxPositions.Count);
+            Assert.AreEqual(1, board.BoxPositions.Count);
             Assert.IsFalse(board.IsComplete);
         }
 
@@ -158,9 +159,10 @@ namespace Sokoban.Tests
         public void MoveIntoWall_Rejected()
         {
             var board = new Board(MakeLevel(
-                "###",
-                "#P#",
-                "###"));
+                "#####",
+                "#P#B#",
+                "#.G.#",
+                "#####"));
 
             bool moved = board.TryMove(Direction.Up);
 
@@ -174,7 +176,8 @@ namespace Sokoban.Tests
         public void MoveOutOfBounds_Rejected()
         {
             var board = new Board(MakeLevel(
-                "P."));
+                "PB",
+                "G."));
 
             Assert.IsFalse(board.TryMove(Direction.Left));
             Assert.IsFalse(board.TryMove(Direction.Up));
@@ -189,6 +192,7 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "#####",
                 "#PB.#",
+                "#..G#",
                 "#####"));
 
             bool moved = board.TryMove(Direction.Right);
@@ -208,6 +212,7 @@ namespace Sokoban.Tests
                 "#.P.#",
                 "#.B.#",
                 "#...#",
+                "#.G.#",
                 "#####"));
 
             bool moved = board.TryMove(Direction.Down);
@@ -225,6 +230,7 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "#####",
                 "#.BP#",
+                "#G..#",
                 "#####"));
 
             bool moved = board.TryMove(Direction.Left);
@@ -242,6 +248,7 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "#####",
                 "#PB##",
+                "#G..#",
                 "#####"));
 
             bool moved = board.TryMove(Direction.Right);
@@ -259,6 +266,7 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "#####",
                 "#PBB#",
+                "#.GG#",
                 "#####"));
 
             bool moved = board.TryMove(Direction.Right);
@@ -349,12 +357,12 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "#####",
                 "#PBG#",
-                "#..G#",
+                "#.BG#",
                 "#####"));
 
             Assert.IsTrue(board.TryMove(Direction.Right));
 
-            Assert.AreEqual(1, board.BoxPositions.Count);
+            Assert.AreEqual(2, board.BoxPositions.Count);
             Assert.IsFalse(board.IsComplete);
         }
 
@@ -390,6 +398,7 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "######",
                 "#PB..#",
+                "#...G#",
                 "######"));
 
             Assert.IsTrue(board.TryMove(Direction.Right));
@@ -516,11 +525,96 @@ namespace Sokoban.Tests
         }
 
         [Test]
+        public void Constructor_RejectsZeroBoxes()
+        {
+            // One player and one goal but no box is a malformed runtime state.
+            var def = MakeLevel(
+                "###",
+                "#P#",
+                "#G#");
+
+            var exception = Assert.Throws<ArgumentException>(() => new Board(def));
+            StringAssert.Contains("box", exception.Message, "The message must name the missing box.");
+        }
+
+        [Test]
+        public void Constructor_RejectsZeroGoals()
+        {
+            // One player and one box but no goal is a malformed runtime state.
+            var def = MakeLevel(
+                "###",
+                "#P#",
+                "#B#");
+
+            var exception = Assert.Throws<ArgumentException>(() => new Board(def));
+            StringAssert.Contains("goal", exception.Message, "The message must name the missing goal.");
+        }
+
+        [Test]
+        public void Constructor_RejectsBoxGoalMismatch()
+        {
+            // Two boxes but only one goal cannot be a winnable Sokoban board.
+            var def = MakeLevel(
+                "#####",
+                "#PBB#",
+                "#G..#",
+                "#####");
+
+            var exception = Assert.Throws<ArgumentException>(() => new Board(def));
+            StringAssert.Contains("box", exception.Message, "The message must describe the box/goal mismatch.");
+            StringAssert.Contains("goal", exception.Message, "The message must describe the box/goal mismatch.");
+        }
+
+        [Test]
+        public void Constructor_AcceptsValidLevel()
+        {
+            // A normal level (one player, one box, one goal) must still construct.
+            var def = MakeLevel(
+                "#####",
+                "#PBG#",
+                "#####");
+
+            var board = new Board(def);
+
+            Assert.AreEqual(1, board.BoxPositions.Count);
+            Assert.IsFalse(board.IsComplete);
+        }
+
+        [Test]
+        public void Constructor_ValidCompletedLevel_ReportsComplete()
+        {
+            // A box already on the only goal means the board starts complete.
+            var board = new Board(MakeLevel(
+                "#####",
+                "#P*.#",
+                "#####"));
+
+            Assert.IsTrue(board.IsComplete, "A box already on every goal must report complete.");
+        }
+
+        [Test]
+        public void Constructor_RejectsOnePlayerZeroGoals_NoVacuousCompletion()
+        {
+            // Regression for the zero-goal vacuous-win bug: a board with a box but zero goals used to be
+            // constructible and IsComplete returned true immediately (no goal ever failed the coverage
+            // check). It must now be rejected during construction, so it can never exist as an
+            // immediately-complete board.
+            var def = MakeLevel(
+                "###",
+                "#P#",
+                "#B#");
+
+            var exception = Assert.Throws<ArgumentException>(() => new Board(def));
+            StringAssert.Contains("goal", exception.Message, "The message must name the missing goal.");
+        }
+
+        [Test]
         public void Board_DoesNotMutateLevelDefinition()
         {
             var def = MakeLevel(
                 "#####",
                 "#PB.#",
+                "#..G#",
                 "#####");
             var board = new Board(def);
 
@@ -619,12 +713,13 @@ namespace Sokoban.Tests
         [Test]
         public void PlateDoor_ClosedDoorBlocksPlayer_WhenPlateUnoccupied()
         {
-            // Player (1, 1), closed door (2, 1), unoccupied plate (1, 2).
+            // Player (1, 1), closed door (2, 1), unoccupied plate (1, 2); a box (2, 3) and goal (3, 3)
+            // complete the level without touching the door/plate under test.
             var board = new Board(MakeLevel(
                 "#####",
                 "#PD.#",
                 "#T..#",
-                "#...#",
+                "#.BG#",
                 "#####"));
 
             Assert.IsFalse(board.IsDoorOpen(2, 1), "A door with an unoccupied plate must be closed.");
@@ -639,8 +734,8 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "#####",
                 "#.D.#",
-                "#.T.#",
-                "#.P.#",
+                "#.TG#",
+                "#.PB#",
                 "#####"));
 
             Assert.IsTrue(board.TryMove(Direction.Up), "The player must be able to step onto the plate.");
@@ -654,11 +749,13 @@ namespace Sokoban.Tests
         [Test]
         public void PlateDoor_BoxOnPlate_KeepsDoorOpen_AfterPlayerLeaves()
         {
-            // Player (1, 2) pushes the box onto plate (4, 2); door (2, 1) then opens for the player.
+            // Player (1, 2) pushes the box onto plate (4, 2); door (2, 1) then opens for the player. The
+            // goal (1, 3) completes the level without touching the plate/door under test.
             var board = new Board(MakeLevel(
                 "######",
                 "#.D..#",
                 "#PB.T#",
+                "#G...#",
                 "######"));
 
             Assert.IsTrue(board.TryMove(Direction.Right));
@@ -682,8 +779,8 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "#####",
                 "#.D.#",
-                "#.T.#",
-                "#.P.#",
+                "#.TG#",
+                "#.PB#",
                 "#####"));
 
             Assert.IsTrue(board.TryMove(Direction.Up), "Step onto the plate.");
@@ -706,8 +803,8 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "#####",
                 "#.D.#",
-                "#.T.#",
-                "#.P.#",
+                "#.TG#",
+                "#.PB#",
                 "#####"));
 
             Assert.IsTrue(board.TryMove(Direction.Up), "Step onto the plate.");
@@ -729,12 +826,13 @@ namespace Sokoban.Tests
         public void PlateDoor_ClosedDoorBlocksPushedBox()
         {
             // Player (1, 1) tries to push box (2, 1) right into closed door (3, 1); plate (4, 3) is empty.
-            // A second box is then pushed onto the plate, after which the same push succeeds.
+            // A second box is then pushed onto the plate, after which the same push succeeds. Two goals
+            // (5, 1) and (5, 3) complete the level without touching the plate/door under test.
             var board = new Board(MakeLevel(
                 "#######",
-                "#PBD..#",
+                "#PBD.G#",
                 "#.....#",
-                "#.B.T.#",
+                "#.B.TG#",
                 "#######"));
 
             Assert.IsFalse(board.TryMove(Direction.Right), "A box may not be pushed onto a closed door.");
@@ -770,8 +868,8 @@ namespace Sokoban.Tests
             var board = new Board(MakeLevel(
                 "#####",
                 "#.D.#",
-                "#.T.#",
-                "#.P.#",
+                "#.TG#",
+                "#.PB#",
                 "#####"));
 
             BoardSnapshot before = board.CreateSnapshot();
@@ -798,8 +896,8 @@ namespace Sokoban.Tests
             var def = MakeLevel(
                 "#####",
                 "#.D.#",
-                "#.T.#",
-                "#.P.#",
+                "#.TG#",
+                "#.PB#",
                 "#####");
 
             var board = new Board(def);
@@ -814,12 +912,13 @@ namespace Sokoban.Tests
         [Test]
         public void PlateDoor_NoPlates_DoorsAlwaysOpen()
         {
-            // A plate-less board keeps its doors open, so shipped plate-less content is unaffected.
+            // A plate-less board keeps its doors open; a box (3, 3) and goal (3, 2) complete the level
+            // without touching the plate-less door under test.
             var board = new Board(MakeLevel(
                 "#####",
                 "#.D.#",
-                "#.P.#",
-                "#...#",
+                "#.PG#",
+                "#..B#",
                 "#####"));
 
             Assert.IsFalse(board.HasPlateTiles, "This board has no plates.");

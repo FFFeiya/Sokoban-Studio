@@ -57,7 +57,7 @@ Sokoban Studio 是一个 **Unity 技术策划项目**。表面上它是一套完
 
 ## 验证
 
-- EditMode **190/190 passed**，PlayMode **4/4 passed**（`Verify.ps1 -Tier Gate`）。
+- EditMode **196/196 passed**，PlayMode **4/4 passed**（`Verify.ps1 -Tier Gate`）。
 - Windows x64 Release 构建通过（`Verify.ps1 -Tier Release`）。
 - **8 个已发行关卡**（L01–L08，覆盖入门到压力板/门综合挑战），目录审计 8 条目 / 0 错误 / 0 不可解。
 

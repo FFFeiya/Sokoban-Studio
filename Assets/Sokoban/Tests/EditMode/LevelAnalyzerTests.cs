@@ -111,22 +111,24 @@ namespace Sokoban.Tests
         [Test]
         public void Analyzer_PlateDoorLevel_SolvableThroughDoor()
         {
-            // Player (2, 1); box1 (2, 2) over plate (2, 3); box2 (4, 2); door (5, 2); goal (6, 2).
-            // Shortest solution: push box1 down onto the plate (1 move/1 push), step right to (3, 2)
-            // (1 move), then push box2 right twice onto the goal (2 moves/2 pushes) = 4 moves / 3 pushes.
-            // The door only opens while the plate is occupied, and box1 holds it open for the crossing.
+            // Player (2, 1); box1 (2, 2) over plate (2, 3); box2 (4, 2); door (5, 2); goal1 (6, 2) behind
+            // the door; goal2 (2, 4) below the plate. Box1 holds the plate open while box2 crosses the
+            // door onto goal1, then box1 is pushed off the plate down onto goal2. Shortest solution:
+            // push box1 down (1), step right (1), push box2 right twice (2), walk back to (2, 2) (3),
+            // push box1 down onto goal2 (1) = 8 moves / 4 pushes.
             LevelDefinition def = MakeLevel(
                 "########",
                 "#.P....#",
                 "#.B.BDG#",
                 "#.T....#",
+                "#.G....#",
                 "########");
 
             AnalysisResult result = LevelAnalyzer.Analyze(def);
 
             Assert.AreEqual(AnalysisVerdict.Solvable, result.Verdict, result.Detail);
-            Assert.AreEqual(4, result.SolutionMoves, "Shortest-move solution is 4 moves.");
-            Assert.AreEqual(3, result.SolutionPushes, "Box1 down once plus box2 right twice is 3 pushes.");
+            Assert.AreEqual(8, result.SolutionMoves, "Shortest-move solution is 8 moves.");
+            Assert.AreEqual(4, result.SolutionPushes, "Box1 down twice plus box2 right twice is 4 pushes.");
         }
 
         [Test]
@@ -243,10 +245,10 @@ namespace Sokoban.Tests
         }
 
         /// <summary>
-        /// Shared geometry for the multi-group analyzer tests (8x7). The single goal (6, 2) is walled
-        /// in on three sides, so the door at (5, 2) is the only way into it. The pocket cell (2, 5) is
-        /// sealed by walls on all four sides and can never be occupied, and the spare door (4, 5) sits
-        /// in the open lower-right area. The plate (2, 3) is reachable from the player start.
+        /// Shared geometry for the multi-group analyzer tests (8x7). Goal1 (6, 2) is walled in on
+        /// three sides, so the door at (5, 2) is the only way into it; goal2 (1, 3) sits just left of
+        /// the reachable plate (2, 3). The pocket cell (2, 5) is sealed by walls on all four sides and
+        /// can never be occupied, and the spare door (4, 5) sits in the open lower-right area.
         /// Each test promotes a subset of these cells to group B via <c>def.groupIds</c>; every other
         /// cell (including the sealed pocket) stays group A.
         /// '#'=Wall '.'=Floor 'G'=Goal 'T'=Plate 'D'=Door 'P'=Player 'B'=Box
@@ -256,7 +258,7 @@ namespace Sokoban.Tests
             "########",
             "#.P...##",
             "#.B.BDG#",
-            "#.T...##",
+            "#GT...##",
             "###....#",
             "##T#D..#",
             "########"
@@ -272,19 +274,20 @@ namespace Sokoban.Tests
             // this level would be reported unsolvable. Per-group semantics open the group-B door as
             // soon as the group-B plate holds, regardless of group A.
             // Shortest solution: push box1 down onto the plate (1 move/1 push), step right to (3, 2)
-            // (1 move), then push box2 right twice onto the goal (2 moves/2 pushes) = 4 moves / 3 pushes.
+            // (1 move), push box2 right twice onto goal1 (2 moves/2 pushes), walk back to (3, 3)
+            // (3 moves), then push box1 left off the plate onto goal2 (1 move/1 push) = 8 moves / 4 pushes.
             LevelDefinition def = null;
             try
             {
                 def = MakeLevel(MultiGroupRows);
                 def.groupIds[def.Index(2, 3)] = 1; // group-B plate
-                def.groupIds[def.Index(5, 2)] = 1; // group-B door on the only path to the goal
+                def.groupIds[def.Index(5, 2)] = 1; // group-B door on the only path to goal1
 
                 AnalysisResult result = LevelAnalyzer.Analyze(def);
 
                 Assert.AreEqual(AnalysisVerdict.Solvable, result.Verdict, result.Detail);
-                Assert.AreEqual(4, result.SolutionMoves, result.Detail);
-                Assert.AreEqual(3, result.SolutionPushes, result.Detail);
+                Assert.AreEqual(8, result.SolutionMoves, result.Detail);
+                Assert.AreEqual(4, result.SolutionPushes, result.Detail);
                 Assert.IsNotNull(result.Solution, "A solvable result must carry a solution list.");
 
                 // Replay through a fresh real Board: it enforces the per-group door rule, so an

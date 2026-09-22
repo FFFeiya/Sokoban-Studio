@@ -175,9 +175,10 @@ namespace Sokoban.Tests
             Assert.IsFalse(board.IsComplete);
 
             var walled = new Board(MakeLevel(
-                "###",
-                "#P#",
-                "###"));
+                "#####",
+                "#P#B#",
+                "#.G.#",
+                "#####"));
 
             Assert.IsFalse(walled.TryMove(Direction.Up, out bool rejectedCompleted));
             Assert.IsFalse(rejectedCompleted, "A rejected move must never report completion.");
