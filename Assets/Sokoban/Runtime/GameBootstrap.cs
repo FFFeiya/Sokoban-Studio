@@ -328,7 +328,7 @@ namespace Sokoban
 
             GuiPanel.ApplyCjkFont();
 
-            // Top-left unified HUD panel: level title + counters only (spec 5.3 / 8). The key hint
+            // Top-left unified HUD panel: level title + counters only. The key hint
             // is weakened to a plain bottom-left line; the sound toggle stays top-right (AudioController).
             GuiPanel.DrawBacking(new Rect(4f, 4f, 472f, 58f), new Color(0f, 0f, 0f, 0.45f));
 

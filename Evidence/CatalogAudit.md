@@ -1,17 +1,17 @@
 # Catalog Content Audit
 
 - Catalog: `Assets/Sokoban/Levels/LevelCatalog.asset`
-- Generated (UTC): 2026-09-21 00:55:33
+- Generated (UTC): 2026-09-26 02:01:08
 
 | Slot | Level | Players | Boxes | Goals | Errors | Warnings | Status | Verdict | Moves | Pushes | First issue | States | Time (s) | Mechanics |
 |---:|---|---:|---:|---:|---:|---:|---|---|---:|---:|---|---:|---:|---|
-| 0 | Level 01 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (10m/4p) | 10 | 4 |  | 491 | 0.007 | - |
-| 1 | Level 02 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (9m/5p) | 9 | 5 |  | 780 | 0.007 | - |
-| 2 | Level 03 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (13m/3p) | 13 | 3 |  | 772 | 0.005 | - |
-| 3 | Level 04 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (15m/4p) | 15 | 4 |  | 281 | 0.003 | - |
-| 4 | Level 05 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (16m/4p) | 16 | 4 |  | 144 | 0.001 | Plate+Door |
-| 5 | Level 06 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (23m/8p) | 23 | 8 |  | 3657 | 0.025 | Plate+Door |
-| 6 | Level 07 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (13m/6p) | 13 | 6 |  | 1187 | 0.008 | Plate+Door |
-| 7 | Level 08 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (22m/7p) | 22 | 7 |  | 932 | 0.006 | Plate+Door |
+| 0 | 推箱入位 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (11m/5p) | 11 | 5 |  | 1049 | 0.014 | 基础 |
+| 1 | 绕路借道 | 1 | 2 | 2 | 0 | 0 | Valid | Solvable (28m/7p) | 28 | 7 |  | 3025 | 0.022 | 基础 |
+| 2 | 墙角陷阱 | 1 | 3 | 3 | 0 | 0 | Valid | Solvable (23m/7p) | 23 | 7 |  | 24957 | 0.198 | 基础 |
+| 3 | 先后有序 | 1 | 3 | 3 | 0 | 0 | Valid | Solvable (39m/17p) | 39 | 17 |  | 44511 | 0.38 | 基础 |
+| 4 | 以箱压板 | 1 | 3 | 3 | 0 | 0 | Valid | Solvable (46m/16p) | 46 | 16 |  | 32256 | 0.297 | 门 A 组 |
+| 5 | 双板同压 | 1 | 3 | 3 | 0 | 0 | Valid | Solvable (40m/14p) | 40 | 14 |  | 44700 | 0.427 | 门 A 组 |
+| 6 | 分组换门 | 1 | 3 | 3 | 0 | 0 | Valid | Solvable (38m/16p) | 38 | 16 |  | 24446 | 0.208 | 门 A 组+B 组 |
+| 7 | 层层开门 | 1 | 4 | 4 | 0 | 0 | Valid | Solvable (56m/21p) | 56 | 21 |  | 46633 | 0.403 | 门 A 组+B 组 |
 
-Summary: entries=8 valid=8 with-warnings=0 errors=0 missing=0 duplicates=0 unsolvable=0 inconclusive=0
+Summary: entries=8 valid=8 with-warnings=0 errors=0 missing=0 duplicates=0 solvable=8 unsolvable=0 inconclusive=0

@@ -6,7 +6,7 @@ using Sokoban.Editor;
 namespace Sokoban.Tests
 {
     /// <summary>
-    /// Covers the T3 Content Dashboard projection headlessly: the window's validation-only row
+    /// Covers the Content Dashboard projection headlessly: the window's validation-only row
     /// projection is slot-for-slot identical to <see cref="CatalogAudit.Audit"/> for every
     /// validation-derived field (proving no parallel audit logic), the additive audit row fields carry
     /// truthful analyzer search counts and mechanics flags derived from the shipped cells, and the
@@ -95,20 +95,26 @@ namespace Sokoban.Tests
                 Assert.AreEqual(expectedDoors, row.HasDoors, $"Slot {row.Slot} ({row.LevelName}): HasDoors must match the cell data.");
             }
 
-            // Lock the shipped content contract: Levels 05/06 use the plate+door mechanic, 01-04 do not.
-            CatalogAuditRow level05 = RowNamed(rows, "压力板与门");
-            CatalogAuditRow level06 = RowNamed(rows, "持续触发");
-            Assert.IsTrue(level05.HasPlates && level05.HasDoors, "Level 05 must use plate + door.");
-            Assert.IsTrue(level06.HasPlates && level06.HasDoors, "Level 06 must use plate + door.");
+            // Lock the shipped content contract: Levels 05/06 use group-A plate+door, 07/08 use both
+            // groups, 01-04 use neither.
+            foreach (string name in new[] { "以箱压板", "双板同压" })
+            {
+                CatalogAuditRow row = RowNamed(rows, name);
+                Assert.IsTrue(row.HasPlates && row.HasDoors, name + " must use plate + door.");
+                Assert.IsTrue(row.HasGroupADoor, name + "'s doors are group A.");
+                Assert.IsFalse(row.HasGroupBDoor, name + " has no group-B door.");
+                Assert.AreEqual("门 A 组", row.MechanicsLabel, name + " 必须标注 门 A 组。");
+            }
 
-            Assert.IsTrue(level05.HasGroupADoor, "Level 05's doors are group A.");
-            Assert.IsFalse(level05.HasGroupBDoor, "Level 05 has no group-B door.");
-            Assert.AreEqual("门 A 组", level05.MechanicsLabel, "第 05 关必须标注 门 A 组。");
-            Assert.IsTrue(level06.HasGroupADoor, "Level 06's doors are group A.");
-            Assert.IsFalse(level06.HasGroupBDoor, "Level 06 has no group-B door.");
-            Assert.AreEqual("门 A 组", level06.MechanicsLabel, "第 06 关必须标注 门 A 组。");
+            foreach (string name in new[] { "分组换门", "层层开门" })
+            {
+                CatalogAuditRow row = RowNamed(rows, name);
+                Assert.IsTrue(row.HasPlates && row.HasDoors, name + " must use plate + door.");
+                Assert.IsTrue(row.HasGroupADoor && row.HasGroupBDoor, name + " must use both door groups.");
+                Assert.AreEqual("门 A 组+B 组", row.MechanicsLabel, name + " 必须标注 门 A 组+B 组。");
+            }
 
-            foreach (string name in new[] { "基础推动", "墙角陷阱", "推箱顺序", "空间规划" })
+            foreach (string name in new[] { "推箱入位", "绕路借道", "墙角陷阱", "先后有序" })
             {
                 CatalogAuditRow row = RowNamed(rows, name);
                 Assert.IsFalse(row.HasPlates, name + " must have no plates.");

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Sokoban.Tests
 {
     /// <summary>
-    /// T4 — Validation issue navigation (pure validator data). The window's click-to-focus and
+    /// Validation issue navigation (pure validator data). The window's click-to-focus and
     /// scroll-to-cell behaviour is IMGUI rendering and is therefore verified at the manual gate only
     /// (batchmode cannot render it). These EditMode tests pin the data the window consumes: the
     /// occupant-on-wall error, the occupant-on-door error and the corner-deadlock warning must each
@@ -125,7 +125,7 @@ namespace Sokoban.Tests
             return issues.Find(i => i.Severity == LevelIssueSeverity.Error && i.Message.StartsWith(prefix));
         }
 
-        /// <summary>D015: destroys an in-memory ScriptableObject created by a test.</summary>
+        /// <summary>Destroys an in-memory ScriptableObject created by a test.</summary>
         private static void Destroy(LevelDefinition target)
         {
             if (target != null)

@@ -7,7 +7,7 @@ namespace Sokoban
     /// overlay. Completion is re-evaluated when the bootstrap exposes a new board (first frame and
     /// after Restart), so a level that already has every box on a goal shows the overlay immediately;
     /// otherwise it comes from the movement result. After completion movement stays disabled and only
-    /// Undo/Restart/the overlay buttons remain available.
+    /// Undo/Restart/the overlay buttons remain available. Esc returns to level select at any time.
     /// </summary>
     public class GameController : MonoBehaviour
     {
@@ -21,16 +21,6 @@ namespace Sokoban
 
         /// <summary>Exposes the completion overlay state to tests without driving GUI input.</summary>
         public bool IsCompletedForTests => _completed;
-
-        /// <summary>
-        /// Forces the completion overlay for the automated capture driver. The board may already be
-        /// complete after a full replay, but <see cref="SynchronizeCompletion"/> only re-evaluates on a
-        /// board-instance change, so the overlay state is set explicitly here.
-        /// </summary>
-        public void MarkCompleted()
-        {
-            _completed = true;
-        }
 
         private void Awake()
         {
@@ -62,7 +52,7 @@ namespace Sokoban
                 return;
             }
 
-            if (_selectRequested)
+            if (_selectRequested || Input.GetKeyDown(KeyCode.Escape))
             {
                 _selectRequested = false;
                 bootstrap.LoadLevelSelect();

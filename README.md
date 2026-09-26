@@ -4,17 +4,11 @@
 
 制作 → 校验 → 分析 → 解法预览 → 一键试玩 → 迭代
 
-<!-- AUTO:HERO_RUNTIME:START -->
 ![游戏实机](Docs/Screenshots/runtime-gameplay.png)
-<!-- AUTO:HERO_RUNTIME:END -->
 
-<!-- AUTO:HERO_DASHBOARD:START -->
 ![内容总览](Docs/Screenshots/editor-dashboard.png)
-<!-- AUTO:HERO_DASHBOARD:END -->
 
-<!-- AUTO:HERO_EDITOR:START -->
 ![关卡编辑器与解法预览](Docs/Screenshots/editor-solution-preview.png)
-<!-- AUTO:HERO_EDITOR:END -->
 
 **设计说明 / Case Study：** [Sokoban Studio：从推箱子到关卡生产工具链](https://FFFeiya.github.io/2026/09/21/sokoban-studio/)
 
@@ -24,10 +18,10 @@
 
 ## 为什么做这个项目
 
-- **一套规则系统，两类使用者。** 正式游戏与关卡编辑器运行同一套确定性的 `Board` 规则，因此一个在编辑器中通过校验并试玩通过的关卡，在运行时行为完全一致。
+- **一套规则系统，两类使用者。** 正式游戏、关卡编辑器的试玩与分析器都运行同一套确定性的 `Board` 移动规则，因此在编辑器里试玩或求解通过的关卡，到了正式游戏里走法完全相同。
 - **制作闭环得以闭合。** 制作 → 校验 → 保存 → 一键试玩，并提供可跨域重载（domain reload）安全传递的试玩交接，同时覆盖不属于已发行目录的关卡。
 - **面向设计师安全性的工具，而不只是瓦片绘制器。** 阻断性错误会拦截保存/试玩；静态死角死锁警告与「有门无压力板」提示属于建议性；分析器如实报告 `SOLVABLE / UNSOLVABLE / INCONCLUSIVE`；目录审计会报告每个已发行槽位的健康状况。
-- **验证纪律。** 分层的 `Fast / Gate / Release` 门禁，PlayMode 测试真正接入门禁，并且该接入以一个刻意失败的探针在正反两个方向上都证明了并非空转（证据已提交）。
+- **验证纪律。** 分层的 `Fast / Gate / Release` 门禁，EditMode 与 PlayMode 测试都接入门禁；每个已发行关卡的最短解和机制必要性都由测试锁定。
 
 ## 如何游玩
 
@@ -45,25 +39,25 @@
 | 方向键 / WASD | 移动（并推箱） |
 | Z | 撤销 |
 | R | 重新开始 |
+| Esc | 返回关卡选择 |
+| M | 静音 / 取消静音 |
 
-<!-- AUTO:RUNTIME_COMPLETE:START -->
 ![关卡完成](Docs/Screenshots/runtime-complete.png)
-<!-- AUTO:RUNTIME_COMPLETE:END -->
 
 **八个已发行关卡**
 
-下表中的每个最短解都经分析器验证（针对真实的运行时 `Board` 规则运行）；数值来自目录审计日志（无头 `SmokeTest` 目录审计，可通过下文的 smoke 命令重新运行）。
+下表中的最短解由分析器在真实的运行时 `Board` 规则上求得，并由 EditMode 测试逐关锁定（最短步数、推箱数、完整回放）。L05–L08 另有测试证明机制不是摆设：把门改成墙后关卡穷举无解；L07/L08 把 A/B 两组合并成一组后同样穷举无解。
 
 | 关卡 | 网格 | 箱子 | 最短解 | 设计意图 |
 | --- | --- | --- | --- | --- |
-| **L01** 基础推动 | 7×6 | 2 | 10 moves / 4 pushes | 移动与推箱的入门。 |
-| **L02** 墙角陷阱 | 8×7 | 2 | 9 moves / 5 pushes | 你不能拉箱子：需要绕到箱子的另一侧，并注意死角危险。 |
-| **L03** 推箱顺序 | 7×7 | 2 | 13 moves / 3 pushes | 推箱顺序很重要。 |
-| **L04** 空间规划 | 8×8 | 2 | 15 moves / 4 pushes | 围绕内部墙带进行空间规划。 |
-| **L05** 压力板与门 | 9×6 | 2 | 16 moves / 4 pushes | 压力板 + 门的引入：必须用箱子压住压力板，才能打开通往第二个目标的唯一一扇门。 |
-| **L06** 持续触发 | 10×6 | 2 | 23 moves / 8 pushes | 组合终章：一次压力板往返、一扇棋盘中部活门，以及一个需要双箱规划的房间。 |
-| **L07** 机关组合 | 9×7 | 2 | 13 moves / 6 pushes | 箱子常驻压力板：一个箱子停在压力板上保持门开启，同时把第二个箱子推过门。 |
-| **L08** 综合挑战 | 10×7 | 2 | 22 moves / 7 pushes | 终章：顺序、压力板/门与空间规划——绕行以激活压力板，穿过门，然后把两个箱子都送回目标点。 |
+| **L01** 推箱入位 | 9×7 | 2 | 11 moves / 5 pushes | 教学：箱子只能推不能拉，第二个箱子要先绕到它的另一侧。 |
+| **L02** 绕路借道 | 10×7 | 2 | 28 moves / 7 pushes | 玩家站在箱子错误的一侧、目标在身后，必须绕整条回廊从另一端接近。 |
+| **L03** 墙角陷阱 | 9×8 | 3 | 23 moves / 7 pushes | 内墙把三个箱子限制在各自的窄道里，推向外墙或顶行就再也推不回来。 |
+| **L04** 先后有序 | 9×7 | 3 | 39 moves / 17 pushes | 两室只由一个缺口连通，必须先填最深的目标，否则先进去的箱子会堵死缺口。 |
+| **L05** 以箱压板 | 9×8 | 3 | 46 moves / 16 pushes | 压力板与门入门：一个箱子压板撑门，送另外两个箱子过门，最后把压板箱推回自己的目标。 |
+| **L06** 双板同压 | 9×8 | 3 | 40 moves / 14 pushes | 同组两块压板必须同时被压住门才开：先布阵，再护送第三个箱子穿门。 |
+| **L07** 分组换门 | 11×9 | 3 | 38 moves / 16 pushes | A/B 两组门各自独立：同一个箱子先压 A 板开左门，再转压 B 板开右门。 |
+| **L08** 层层开门 | 12×7 | 4 | 56 moves / 21 pushes | 综合：A 板开中庭门，中庭里的 B 板才开终点门；四个箱子的先后顺序与撑门时机都要规划。 |
 
 目录审计报告 8 个条目，8 个有效，0 个错误，0 个警告，0 个不可解，0 个不确定。
 
@@ -71,18 +65,16 @@
 
 打开 **Tools → Sokoban → Level Editor**。
 
-<!-- AUTO:EDITOR_LEVEL_EDITOR:START -->
 ![关卡编辑器](Docs/Screenshots/editor-level-editor.png)
-<!-- AUTO:EDITOR_LEVEL_EDITOR:END -->
 
 1. **制作（New）。** 按下 **New** 获得一份全新的工作副本，或指定一个已有的 `LevelDefinition` 资源并按下 **Load**。
 2. **校验（Validate）。** 编辑器实时校验并按严重程度对问题分组。阻断性错误会禁用保存/试玩；警告为建议性。
-3. **保存（Save）。** **Save** / **Save As** 将工作副本写入 `Assets/Sokoban/Levels/` 下的 `.asset` 文件。
+3. **保存（Save）。** **Save** 写回当前关卡自己的 `.asset`；新建且从未保存过的关卡没有自己的路径，**Save** 会改为弹出 **Save As** 让你选择位置（覆盖已有文件前会确认），绝不会沿用上一个关卡的路径。
 4. **试玩（Playtest）。** 一次点击即可校验、保存，并使用与已发行玩法相同的运行时加载器，在工作关卡上进入 Play Mode。
 
 **编辑器工具集**
 
-- 笔刷：Wall、Floor、Goal、Player、Box、Erase、Plate、Door（在网格上点击或拖拽）。
+- 笔刷：墙、地板、目标、玩家、箱子、压力板 A、门 A、压力板 B、门 B（在网格上点击或拖拽）。没有单独的擦除笔刷：「地板」笔刷兼作擦除，右键单击也会把单元格擦回地板。
 - **Apply Resize** 用于更改网格尺寸。
 - 按严重程度分组的校验（错误列表 + 警告列表），警告单元格在网格中高亮显示；点击某一行可将网格导航到对应单元格。
 - **Undo / Redo**（Ctrl+Z / Ctrl+Y）作用于工作副本的编辑历史；**Ctrl+S** 保存，**Ctrl+Enter** 试玩。
@@ -112,10 +104,6 @@
 - 有门却没有压力板——因为没有压力板组需要满足，所以该门保持开启。
 
 `LevelValidator` 是关卡制作与试玩流程共享的完整内容校验路径（阻断性错误 + 建议性警告）。运行时 `Board` 不依赖该路径即可安全构建：其构造函数会独立强制运行时必须成立的核心不变量（玩家唯一、箱子与目标数量非空且相等、网格格式与占据者位置合法），非法时抛出异常——因此绕过编辑器校验的畸形数据也不会静默进入 Gameplay，而非声称两者的规则完全一致。
-
-**破坏性开发夹具**
-
-`Sokoban/Development/Build All Content And Scenes (Destructive)` 仅是一个受保护的开发夹具。因为它会删除并重新生成资源，所以会请求确认；它用于引导与测试——它会重新生成 Level01–04 以及目录和场景。已发行的 `LevelDefinition` 资源才是权威内容，在作者化之后未被重新生成。
 
 **一键试玩桥**
 
@@ -172,16 +160,16 @@ Assets/Sokoban/
 规范入口：
 
 ```powershell
-.\Scripts\Agent\Verify.ps1 -Tier Fast
-.\Scripts\Agent\Verify.ps1 -Tier Gate
-.\Scripts\Agent\Verify.ps1 -Tier Release
+.\Scripts\Verify.ps1 -Tier Fast
+.\Scripts\Verify.ps1 -Tier Gate
+.\Scripts\Verify.ps1 -Tier Release
 ```
 
 | 层级 | 作用 | 当前证据 |
 | --- | --- | --- |
 | **Fast** | 断言项目版本为 2022.3.51f1，以批处理模式启动 Unity 以强制脚本导入/编译，并在出现编译器错误时失败。 | 编译干净。 |
-| **Gate** | 运行 Fast，随后运行 EditMode 测试，再运行 PlayMode 测试（当 PlayMode 目录存在时），解析 Unity Test Framework XML。 | EditMode **196/196 passed**，PlayMode **4/4 passed**。 |
-| **Release** | 运行 Gate，随后构建 Windows x64 独立版本并要求产物存在。 | 基线为绿；产物 `Build/Sokoban Studio.exe`。 |
+| **Gate** | 运行 Fast，随后运行 EditMode 测试，再运行 PlayMode 测试（当 PlayMode 目录存在时），解析 Unity Test Framework XML。 | EditMode **197/197 passed**，PlayMode **4/4 passed**。 |
+| **Release** | 运行 Gate，随后构建 Windows x64 独立版本并要求产物存在。 | 基线为绿；产物 `Build/Sokoban-Studio.exe`。 |
 
 一个无头冒烟检查直接运行相同的内容路径：
 
@@ -191,14 +179,12 @@ Unity.exe -batchmode -quit -projectPath <repo> -executeMethod Sokoban.Editor.Smo
 
 它以 0 退出并报告 `SMOKE OK ... catalog=8`。
 
-门禁的 PlayMode 接线被证明是非空转的，而非想当然：一个刻意失败的 PlayMode 探针会把门禁翻转为 FAIL（退出码 1），移除该探针后又将其恢复为 PASS（退出码 0）。
-
 ## 已知限制
 
 - **OnGUI 原型级呈现。** 未使用 UIElements，除视图侧的移动缓动外没有动画打磨（棋盘保持即时权威；缓动仅限视图）。
 - **音频为程序化合成。** 8 类提示音（UI 点击 / 移动 / 推箱 / 撤销 / 门打开 / 门关闭 / 箱子到达目标 / 关卡完成）在内存中合成（`AudioClip.Create`），无外部素材、无版权风险，按 `M` 键静音。
 - **八个已发行关卡。**
-- Windows x64 构建已通过无头方式验证；手动启动并操作 `Build/Sokoban Studio.exe` 是一个人工 QA 步骤，不在门禁覆盖范围内。
+- Windows x64 构建已通过无头方式验证；手动启动并操作 `Build/Sokoban-Studio.exe` 是一个人工 QA 步骤，不在门禁覆盖范围内。
 - **分析器仅编辑器可用且有预算上限**——足够大的关卡可能返回 `INCONCLUSIVE`。这是刻意的：它绝不把预算耗尽报告为不可解。
 - **压力板与门支持 A/B 两组。** 组内独立联动（组内压力板全部被占压时打开该组门；无压力板的组保持开门）。
 

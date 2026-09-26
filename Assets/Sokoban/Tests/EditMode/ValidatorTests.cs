@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Sokoban.Tests
 {
     /// <summary>
-    /// Covers the T06 P0 level validator: every rule rejects a specifically-malformed level, a
+    /// Covers the level validator: every rule rejects a specifically-malformed level, a
     /// known-good level passes with zero errors, and a malformed level never throws (the validator
     /// catches the <see cref="Board"/> construction failure and reports it).
     /// </summary>
@@ -263,7 +263,7 @@ namespace Sokoban.Tests
             Assert.IsEmpty(LevelValidator.Validate(def));
         }
 
-        // --- M4: group-consistency validation -----------------------------------------------------
+        // --- Group-consistency validation -----------------------------------------------------
         // LevelAssetFactory.BuildLevel materializes groupIds all-zero (group A); promoting a cell to
         // group B is `def.groupIds[def.Index(x, y)] = 1;` and `def.groupIds = null;` simulates an asset
         // authored before the field existed.

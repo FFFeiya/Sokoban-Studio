@@ -6,15 +6,15 @@ param(
 )
 
 # Packages the submission artifacts into $DistDir:
-#   - Sokoban-Studio-Source.zip : the tracked tree only (git archive HEAD), so Library/Temp/
+#   - Sokoban-Studio-Source.zip      : the tracked tree only (git archive HEAD), so Library/Temp/
 #     Logs/UserSettings/Build/obj/.git and every untracked file are excluded automatically.
-#   - Sokoban-Studio-Windows-x64.zip  : the contents of the player build directory, when one exists.
+#   - Sokoban-Studio-Windows-x64.zip : the contents of the player build directory, when one exists.
 # Uses only built-in PowerShell (Compress-Archive / System.IO.Compression). No modules.
 
 $ErrorActionPreference = "Stop"
 
 if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
-    $ProjectPath = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+    $ProjectPath = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 }
 
 function Fail([string]$Message) {

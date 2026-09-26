@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Sokoban.Tests
 {
     /// <summary>
-    /// Covers M1 group identity in the data model only: the parallel per-cell <c>groupIds</c> list is
+    /// Covers group identity in the data model only: the parallel per-cell <c>groupIds</c> list is
     /// created with the <c>count == width*height</c> invariant by the factory and the editor document,
     /// carried by coordinate through Clone and Resize, and read defensively through
     /// <see cref="LevelDefinition.GetGroupId"/> so assets that predate the field stay implicit group A.

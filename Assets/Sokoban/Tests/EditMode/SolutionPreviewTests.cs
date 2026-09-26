@@ -11,7 +11,7 @@ using UnityEngine;
 namespace Sokoban.Tests
 {
     /// <summary>
-    /// Covers the T2 Solution Preview replay logic (<see cref="SolutionPreviewSession"/>) headlessly:
+    /// Covers the Solution Preview replay logic (<see cref="SolutionPreviewSession"/>) headlessly:
     /// the session replays the analyzer solution through a separate <see cref="Board"/> built from a
     /// <see cref="LevelEditorDocument.Clone"/> (never the asset), labels push steps from the real
     /// <see cref="Board.PushCount"/> delta, and leaves shipped asset bytes and lists untouched.
@@ -216,7 +216,7 @@ namespace Sokoban.Tests
             }
         }
 
-        /// <summary>D015: destroys an in-memory ScriptableObject created by a test. Shared assets are never passed here.</summary>
+        /// <summary>Destroys an in-memory ScriptableObject created by a test. Shared assets are never passed here.</summary>
         private static void Destroy(UnityEngine.Object target)
         {
             if (target != null)

@@ -166,7 +166,7 @@ namespace Sokoban.Editor
     public static class CatalogAudit
     {
         /// <summary>Project-root-relative Markdown export path.</summary>
-        public const string ExportPath = "Logs/Agent/CatalogAudit.md";
+        public const string ExportPath = "Logs/CatalogAudit.md";
 
         /// <summary>State budget for the per-entry solvability analysis (matches the analyzer default).</summary>
         public const int AuditMaxStates = 200000;
@@ -511,7 +511,7 @@ namespace Sokoban.Editor
             Debug.Log(FormatConsole(catalog, rows));
         }
 
-        /// <summary>Menu entry: audits the shipped catalog and exports the table to <c>Logs/Agent/CatalogAudit.md</c>.</summary>
+        /// <summary>Menu entry: audits the shipped catalog and exports the table to <c>Logs/CatalogAudit.md</c>.</summary>
         [MenuItem("Sokoban/Audit Catalog (Export Markdown)")]
         public static void ExportMarkdownMenu()
         {

@@ -74,7 +74,7 @@ namespace Sokoban.Editor
             window._level = level;
 
             // Rebinding (or refusing a result) first drops any previous session's detached clone, so
-            // repeatedly opening Preview for different levels never leaks a clone (D015).
+            // repeatedly opening Preview for different levels never leaks a clone.
             window.ClearSession();
 
             if (result != null && result.Verdict == AnalysisVerdict.Solvable)
@@ -95,7 +95,7 @@ namespace Sokoban.Editor
         /// <summary>
         /// Disposes the current replay session's detached clone before the session is replaced or
         /// dropped. A <see cref="SolutionPreviewSession"/> owns its <see cref="SolutionPreviewSession.Clone"/>
-        /// (a ScriptableObject), so the window must destroy it (D015) — never just null the reference.
+        /// (a ScriptableObject), so the window must destroy it — never just null the reference.
         /// Editor-only: the session and clone only ever exist outside play mode, so DestroyImmediate is safe.
         /// </summary>
         private void ClearSession()
@@ -127,23 +127,6 @@ namespace Sokoban.Editor
             }
 
             LevelEditorWindow.OpenFor(level);
-        }
-
-        /// <summary>
-        /// Jumps the bound replay to <paramref name="step"/> of the current solution (0 = start state)
-        /// so the automated capture bridge can show a meaningful mid-solution frame instead of the
-        /// start. A no-op while no replay session is bound (no Solvable analysis); the session's own
-        /// <see cref="SolutionPreviewSession.SetStep"/> silently rejects an out-of-range step.
-        /// </summary>
-        public void JumpToStep(int step)
-        {
-            if (_session == null)
-            {
-                return;
-            }
-
-            _session.SetStep(step);
-            Repaint();
         }
 
         /// <summary>

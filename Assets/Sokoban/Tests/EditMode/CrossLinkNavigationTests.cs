@@ -49,7 +49,7 @@ namespace Sokoban.Tests
             try
             {
                 // Open the editor up front so its implicit starting document can be captured and
-                // destroyed too (D015); OpenInEditor focuses that same window instance.
+                // destroyed too; OpenInEditor focuses that same window instance.
                 window = EditorWindow.GetWindow<LevelEditorWindow>();
                 if (window.LoadedDocument != null)
                 {
@@ -84,7 +84,7 @@ namespace Sokoban.Tests
             }
         }
 
-        /// <summary>D015: destroys an in-memory ScriptableObject created by a test.</summary>
+        /// <summary>Destroys an in-memory ScriptableObject created by a test.</summary>
         private static void Destroy(LevelDefinition target)
         {
             if (target != null)

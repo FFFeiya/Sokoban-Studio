@@ -1,9 +1,5 @@
 # Screenshot Gallery — 截图总览
 
-自动生成 by `Scripts/Agent/CaptureSubmissionMedia.ps1`；共 10 张稳定文件名截图。
-
-- Generated: 2026-09-21T16:22:31.5851830-06:00
-
 ## Runtime
 
 | # | Preview | File | Caption |

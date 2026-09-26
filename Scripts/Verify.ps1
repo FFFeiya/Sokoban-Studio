@@ -9,10 +9,10 @@ $ErrorActionPreference = "Stop"
 $ExpectedVersion = "2022.3.51f1"
 
 if ([string]::IsNullOrWhiteSpace($ProjectPath)) {
-    $ProjectPath = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+    $ProjectPath = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 }
 
-$LogDir = Join-Path $ProjectPath "Logs\Agent"
+$LogDir = Join-Path $ProjectPath "Logs\Verify"
 $ResultDir = Join-Path $LogDir "TestResults"
 $BuildDir = Join-Path $ProjectPath "Build"
 New-Item -ItemType Directory -Force -Path $LogDir, $ResultDir | Out-Null

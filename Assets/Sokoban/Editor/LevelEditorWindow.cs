@@ -14,7 +14,6 @@ namespace Sokoban.Editor
     public class LevelEditorWindow : EditorWindow
     {
         private const float CellSize = 26f;
-        private const string DefaultSavePath = "Assets/Sokoban/Levels/NewLevel.asset";
         private const string SaveFolder = "Assets/Sokoban/Levels";
 
         // Cached labels. GUIContent itself is not skin-dependent, so cached instances are safe to
@@ -86,13 +85,7 @@ namespace Sokoban.Editor
         private int _resizeHeight;
         private string _nameField = "Untitled";
         private UnityEngine.Object _loadSource;
-        private string _saveAsPath = DefaultSavePath;
         private AnalysisResult _lastAnalysis;
-
-        // Non-null only while the automated submission capture pipeline owns this window: it pins the
-        // window title to a unique "[CAPTURE] ..." string that UpdateTitle must not overwrite (see
-        // SetCaptureTitle). Null for every normal interactive session.
-        private string _captureTitle;
 
         // On-demand "Compare with saved" cache. Null until the button is clicked, then holds the one
         // analysis of the saved asset for this document. It is display-only and is cleared whenever
@@ -137,25 +130,6 @@ namespace Sokoban.Editor
         }
 
         /// <summary>
-        /// Automated capture entry point: opens the Level Editor and loads <paramref name="level"/>
-        /// straight into a fresh working copy <em>without</em> the "unsaved changes" prompt that
-        /// <see cref="OpenFor"/> can raise. The capture bridge runs unattended, so a modal dialog here
-        /// would hang the run; unsaved edits made by a human in a previous session are deliberately
-        /// discarded. A null level just opens the window (like <see cref="Open"/>).
-        /// </summary>
-        public static LevelEditorWindow LoadForCapture(LevelDefinition level)
-        {
-            LevelEditorWindow window = OpenWindow();
-
-            if (level != null)
-            {
-                window.LoadDocumentWithoutPrompt(level);
-            }
-
-            return window;
-        }
-
-        /// <summary>
         /// Content Dashboard playtest entry point for an already-saved <paramref name="level"/>: arms
         /// the persistent request asset through <see cref="PlaytestLauncher"/> and then switches to the
         /// gameplay scene and enters play mode through the same shared tail the working-copy Playtest
@@ -192,18 +166,6 @@ namespace Sokoban.Editor
         /// headless tests) can inspect what was loaded without going through the UI.
         /// </summary>
         public LevelEditorDocument LoadedDocument => _document;
-
-        /// <summary>
-        /// Pins the window title to <paramref name="title"/> for the automated capture bridge, so the
-        /// document-name rewrite in <see cref="UpdateTitle"/> cannot clobber the unique "[CAPTURE] ..."
-        /// string the Win32 capturer matches on. Passing null/empty restores the normal title on the
-        /// next repaint.
-        /// </summary>
-        public void SetCaptureTitle(string title)
-        {
-            _captureTitle = title;
-            UpdateTitle();
-        }
 
         /// <summary>Creates or focuses the Level Editor window; shared by <see cref="Open"/> and <see cref="OpenFor"/>.</summary>
         private static LevelEditorWindow OpenWindow()
@@ -250,7 +212,7 @@ namespace Sokoban.Editor
         /// <summary>Unity calls this when the user confirms Save in the close-with-changes prompt.</summary>
         public override void SaveChanges()
         {
-            if (_document != null && TrySave(_document.SourcePath ?? _saveAsPath))
+            if (_document != null && SaveCurrent())
             {
                 base.SaveChanges();
             }
@@ -319,27 +281,12 @@ namespace Sokoban.Editor
 
                 if (GUILayout.Button(SaveContent))
                 {
-                    TrySave(_document.SourcePath ?? _saveAsPath);
+                    SaveCurrent();
                 }
 
                 if (GUILayout.Button(SaveAsContent))
                 {
-                    string suggestedName = string.IsNullOrEmpty(_document.Working.levelName)
-                        ? "NewLevel"
-                        : _document.Working.levelName.Replace(' ', '_');
-
-                    string path = EditorUtility.SaveFilePanelInProject(
-                        "关卡另存为",
-                        suggestedName,
-                        "asset",
-                        "选择关卡资产的保存位置",
-                        SaveFolder);
-
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        _saveAsPath = path;
-                        TrySave(path);
-                    }
+                    PromptSaveAs();
                 }
             }
 
@@ -602,7 +549,7 @@ namespace Sokoban.Editor
 
         /// <summary>
         /// Draws the non-color group glyph ("A"/"B") centered over a plate/door cell, so group identity
-        /// stays readable for designers who cannot rely on color. Group A is 0, group B is 1 (D017).
+        /// stays readable for designers who cannot rely on color. Group A is 0, group B is 1.
         /// </summary>
         private void DrawGroupGlyph(Rect cellRect, int groupId)
         {
@@ -715,10 +662,8 @@ namespace Sokoban.Editor
 
         /// <summary>
         /// Selects a cell and requests a one-shot scroll to it, so the warning/error frame is visible.
-        /// Public because the automated capture bridge focuses the validation fixture's offending cell
-        /// (see <see cref="LoadForCapture"/>).
         /// </summary>
-        public void SelectAndFocusCell(int cellX, int cellY)
+        private void SelectAndFocusCell(int cellX, int cellY)
         {
             _hasSelectedCell = true;
             _selectedCellX = cellX;
@@ -820,7 +765,7 @@ namespace Sokoban.Editor
 
             if (current.keyCode == KeyCode.S)
             {
-                TrySave(_document.SourcePath ?? _saveAsPath);
+                SaveCurrent();
                 current.Use();
             }
             else if (current.keyCode == KeyCode.Return || current.keyCode == KeyCode.KeypadEnter)
@@ -1023,29 +968,6 @@ namespace Sokoban.Editor
             _savedAnalysisUnavailable = false;
         }
 
-        /// <summary>
-        /// Injects a precomputed analysis result as the working-copy verdict the "关卡分析" section
-        /// renders, exactly as the explicit "分析可解性" button would. Added for the automated capture
-        /// bridge, which runs the bounded analyzer itself and then shows the result in the window. A
-        /// null result is ignored so an injection never blanks a previously shown verdict.
-        /// </summary>
-        public void InjectAnalysis(AnalysisResult result)
-        {
-            if (result == null)
-            {
-                return;
-            }
-
-            _lastAnalysis = result;
-            Repaint();
-        }
-
-        /// <summary>
-        /// The working-copy verdict currently shown by the analysis section (null until an explicit
-        /// analysis or an <see cref="InjectAnalysis"/> call). Exposed read-only for headless tests.
-        /// </summary>
-        public AnalysisResult LastAnalysis => _lastAnalysis;
-
         /// <summary>True when the details contain at least one blocking error.</summary>
         private static bool HasBlockingErrors(List<LevelIssue> issues)
         {
@@ -1136,20 +1058,6 @@ namespace Sokoban.Editor
             ApplyLoadedDocument(source);
         }
 
-        /// <summary>
-        /// Prompt-free variant of <see cref="LoadDocument"/> used by the automated capture bridge: it
-        /// replaces the working copy unconditionally (see <see cref="LoadForCapture"/>).
-        /// </summary>
-        private void LoadDocumentWithoutPrompt(LevelDefinition source)
-        {
-            if (source == null)
-            {
-                return;
-            }
-
-            ApplyLoadedDocument(source);
-        }
-
         /// <summary>Loads a copy of <paramref name="source"/> and resets every per-document cache.</summary>
         private void ApplyLoadedDocument(LevelDefinition source)
         {
@@ -1158,6 +1066,35 @@ namespace Sokoban.Editor
             SyncResizeFields();
             ClearSelectedCell();
             ResetAnalysisState();
+        }
+
+        /// <summary>
+        /// Saves to the document's own asset. An untitled document (New, never saved) has no path of
+        /// its own, so it always goes through the Save As dialog instead of reusing a path from an
+        /// earlier document, which would silently overwrite that asset.
+        /// </summary>
+        private bool SaveCurrent()
+        {
+            return string.IsNullOrEmpty(_document.SourcePath)
+                ? PromptSaveAs()
+                : TrySave(_document.SourcePath);
+        }
+
+        /// <summary>Asks for a target path (the panel confirms before replacing a file) and saves there.</summary>
+        private bool PromptSaveAs()
+        {
+            string suggestedName = string.IsNullOrEmpty(_document.Working.levelName)
+                ? "NewLevel"
+                : _document.Working.levelName.Replace(' ', '_');
+
+            string path = EditorUtility.SaveFilePanelInProject(
+                "关卡另存为",
+                suggestedName,
+                "asset",
+                "选择关卡资产的保存位置",
+                SaveFolder);
+
+            return !string.IsNullOrEmpty(path) && TrySave(path);
         }
 
         private bool TrySave(string assetPath)
@@ -1226,7 +1163,7 @@ namespace Sokoban.Editor
                     "保存",
                     "取消");
 
-                if (!saveFirst || !TrySave(_document.SourcePath ?? _saveAsPath))
+                if (!saveFirst || !SaveCurrent())
                 {
                     return;
                 }
@@ -1278,7 +1215,7 @@ namespace Sokoban.Editor
             switch (choice)
             {
                 case 0:
-                    return TrySave(_document.SourcePath ?? _saveAsPath);
+                    return SaveCurrent();
                 case 1:
                     return true;
                 default:
@@ -1299,14 +1236,6 @@ namespace Sokoban.Editor
 
         private void UpdateTitle()
         {
-            // While the automated capture bridge owns this window, pin the unique "[CAPTURE]" title so
-            // the Win32 capturer can find the HWND; the per-frame document title rewrite is suppressed.
-            if (!string.IsNullOrEmpty(_captureTitle))
-            {
-                titleContent = new GUIContent(_captureTitle);
-                return;
-            }
-
             if (_document == null)
             {
                 return;

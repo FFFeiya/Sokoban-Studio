@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Sokoban.Tests
 {
     /// <summary>
-    /// Covers the P1-4 catalog content-health audit: a well-formed catalog produces VALID rows with
+    /// Covers the catalog content-health audit: a well-formed catalog produces VALID rows with
     /// correct counts and truthful analyzer verdicts, null/duplicate/box-goal-mismatch slots are each
     /// flagged on the row that owns the defect, an empty catalog is handled without throwing, and the
     /// console/Markdown renderers carry every slot plus the summary footer.
@@ -191,7 +191,7 @@ namespace Sokoban.Tests
             StringAssert.Contains("Summary: entries=2", markdown, "The Markdown footer must summarize the rows.");
 
             Assert.AreEqual(
-                "Logs/Agent/CatalogAudit.md",
+                "Logs/CatalogAudit.md",
                 CatalogAudit.ExportPath,
                 "The export path must stay under Logs/ outside Assets.");
         }

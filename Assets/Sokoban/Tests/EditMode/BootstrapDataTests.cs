@@ -93,24 +93,21 @@ namespace Sokoban.Tests
             LevelDefinition level = LoadLevel01();
             var board = new Board(level);
 
-            // Route: walk right and up to stand above the first box, push it left onto the goal,
-            // walk around to the second box, push it left onto the second goal.
+            // Route: push the lower box down to the bottom row, step round behind it and push it right
+            // twice onto the bottom goal; then go back up and push the upper box right twice onto its goal.
             Direction[] solution =
             {
-                Direction.Right,
-                Direction.Up,
-                Direction.Up,
-                Direction.Up,
-                Direction.Left,
-                Direction.Left,
                 Direction.Down,
                 Direction.Down,
+                Direction.Left,
                 Direction.Down,
                 Direction.Right,
                 Direction.Right,
                 Direction.Up,
-                Direction.Left,
-                Direction.Left
+                Direction.Up,
+                Direction.Up,
+                Direction.Right,
+                Direction.Right
             };
 
             var rejected = new List<int>();
@@ -124,7 +121,7 @@ namespace Sokoban.Tests
 
             Assert.IsEmpty(rejected, "Every solution move must be accepted; rejected indices: " + string.Join(",", rejected));
             Assert.AreEqual(solution.Length, board.MoveCount, "Move count must match the solution length.");
-            Assert.AreEqual(4, board.PushCount, "The solution pushes two boxes twice each.");
+            Assert.AreEqual(5, board.PushCount, "The solution pushes five times.");
             Assert.IsTrue(board.IsComplete, "Following the known solution must complete the level.");
         }
     }

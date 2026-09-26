@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Sokoban.Tests
 {
     /// <summary>
-    /// T5 — Editor Undo/Redo working-copy history. <see cref="LevelEditorDocument"/> records a deep
+    /// Editor Undo/Redo working-copy history. <see cref="LevelEditorDocument"/> records a deep
     /// in-memory Clone of the previous working state before every mutation (Paint/Resize/SetLevelName),
     /// swaps the working copy on Undo/Redo, clears history on New/Load, rebases on Save/SaveAs and is
     /// capped at 64 entries. The window's Ctrl+Z/Ctrl+Y input is IMGUI rendering and is therefore
@@ -306,7 +306,7 @@ namespace Sokoban.Tests
             }
         }
 
-        /// <summary>D015: destroys the in-memory working copy created by a test. Shared assets are never passed here.</summary>
+        /// <summary>Destroys the in-memory working copy created by a test. Shared assets are never passed here.</summary>
         private static void Destroy(LevelEditorDocument document)
         {
             if (document == null)

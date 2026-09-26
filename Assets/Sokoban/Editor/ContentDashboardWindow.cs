@@ -28,7 +28,7 @@ namespace Sokoban.Editor
             new GUIContent("全部分析", "逐关运行有界求解器，一次一关（可取消）。");
 
         private static readonly GUIContent ExportContent =
-            new GUIContent("导出 Markdown", "运行完整目录审计并写入 Logs/Agent/CatalogAudit.md。");
+            new GUIContent("导出 Markdown", "运行完整目录审计并写入 Logs/CatalogAudit.md。");
 
         private static readonly GUIContent OpenEditorContent =
             new GUIContent("打开编辑器", "打开关卡编辑器窗口。");
@@ -388,19 +388,6 @@ namespace Sokoban.Editor
         {
             _rows = BuildValidationRows(_catalog);
             _analyzed = false;
-        }
-
-        /// <summary>
-        /// Public entry point for the same explicit "Analyze All" pass the toolbar button runs: it
-        /// refreshes the validation projection and then runs the bounded solver once per level (main
-        /// thread, cancelable progress bar, no Thread.Sleep). Added for the automated capture bridge,
-        /// which drives the dashboard headlessly and captures after this call returns (the progress bar
-        /// has already cleared by then). A no-op for an empty/absent catalog.
-        /// </summary>
-        public void RunAnalyzeAll()
-        {
-            AnalyzeAll();
-            Repaint();
         }
 
         private void AnalyzeAll()

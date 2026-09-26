@@ -24,7 +24,7 @@ namespace Sokoban.Tests
         private const string ProbeName = "Playtest Domain Reload Probe";
 
         /// <summary>
-        /// Deliberately different from every shipped level (6x4 vs Level01's 7x6), so a silent
+        /// Deliberately different from every shipped level (no shipped level is 6x4), so a silent
         /// fallback to the serialized level cannot pass this test.
         /// </summary>
         private static readonly string[] ProbeRows =

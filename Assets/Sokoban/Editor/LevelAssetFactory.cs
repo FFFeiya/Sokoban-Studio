@@ -9,14 +9,11 @@ namespace Sokoban.Editor
 {
     /// <summary>
     /// Development-only content factory and test fixture. It can author level assets, the level
-    /// catalog and the three gameplay-flow scenes programmatically from hard-coded ASCII layouts,
-    /// so bootstrap, tests and fixtures do not have to hand-write that YAML, and merges the scenes
-    /// into the build settings.
+    /// catalog and the three gameplay-flow scenes programmatically from ASCII layouts, so tests and
+    /// fixtures do not have to hand-write that YAML, and merges the scenes into the build settings.
     ///
-    /// The shipped <see cref="LevelDefinition"/> assets are the canonical authored content: they are
-    /// produced through the Level Editor and must not be overwritten casually. This factory exists
-    /// for bootstrapping, tests and fixtures only, and its content-regeneration entry point is
-    /// guarded and marked destructive.
+    /// The shipped <see cref="LevelDefinition"/> assets are the canonical authored content; this
+    /// factory never regenerates them.
     /// </summary>
     public static class LevelAssetFactory
     {
@@ -34,142 +31,6 @@ namespace Sokoban.Editor
         public const string MainMenuScenePath = ScenesFolder + "/MainMenu.unity";
         public const string LevelSelectScenePath = ScenesFolder + "/LevelSelect.unity";
         public const string GameplayScenePath = ScenesFolder + "/Gameplay.unity";
-
-        /// <summary>
-        /// Layout for the first shipped level, 7x6, one player, two boxes, two goals.
-        /// '#'=Wall  '.'=Floor  'G'=Goal  'P'=Player  'B'=Box
-        /// Row 0 is the top authored row.
-        /// </summary>
-        private static readonly string[] Level01Rows =
-        {
-            "#######",
-            "#G.B..#",
-            "#.....#",
-            "#G.B..#",
-            "#..P..#",
-            "#######"
-        };
-
-        /// <summary>
-        /// Layout for the second shipped level, 8x7, one player, two boxes, two goals. Harder than
-        /// Level01: the first box must be pushed up twice and then left, and the player has to walk
-        /// around the remaining box before pushing it up onto its goal.
-        /// '#'=Wall  '.'=Floor  'G'=Goal  'P'=Player  'B'=Box
-        /// </summary>
-        private static readonly string[] Level02Rows =
-        {
-            "########",
-            "#......#",
-            "#.G.G..#",
-            "#......#",
-            "#..BB..#",
-            "#..P...#",
-            "########"
-        };
-
-        /// <summary>
-        /// Layout for the third shipped level, 7x7, one player, two boxes, two goals. A step up from
-        /// Level02: the player has to walk around the box cluster and push one box down onto its goal
-        /// before nudging the other across the board. Shortest solution is 13 moves / 3 pushes.
-        /// '#'=Wall  '.'=Floor  'G'=Goal  'P'=Player  'B'=Box
-        /// </summary>
-        private static readonly string[] Level03Rows =
-        {
-            "#######",
-            "#.....#",
-            "#.GBB.#",
-            "#..G..#",
-            "#.....#",
-            "#..P..#",
-            "#######"
-        };
-
-        /// <summary>
-        /// Layout for the fourth shipped level, 8x8, one player, two boxes, two goals. The hardest of
-        /// the shipped set: an internal wall band splits the board and both boxes must be pushed up
-        /// to the top row. Shortest solution is 15 moves / 4 pushes.
-        /// '#'=Wall  '.'=Floor  'G'=Goal  'P'=Player  'B'=Box
-        /// </summary>
-        private static readonly string[] Level04Rows =
-        {
-            "########",
-            "#.G..G.#",
-            "#..BB..#",
-            "#......#",
-            "#.####.#",
-            "#......#",
-            "#..P...#",
-            "########"
-        };
-
-        /// <summary>
-        /// Destructive development menu entry. Regenerates the shipped Level01-04 assets, the
-        /// LevelCatalog and all three scenes from the hard-coded factory ASCII layouts, so it
-        /// overwrites canonical authored content and requires explicit confirmation.
-        /// </summary>
-        [MenuItem("Sokoban/Development/Build All Content And Scenes (Destructive)")]
-        public static void CreateAllMenu()
-        {
-            if (!EditorUtility.DisplayDialog("Destructive content regeneration", "This DELETES and regenerates the shipped Level01-04 assets, LevelCatalog, and all three scenes from the hard-coded factory ASCII layouts. Shipped LevelDefinition assets are canonical content; this tool exists for bootstrap/tests/fixtures only. Continue?", "Regenerate", "Cancel"))
-            {
-                return;
-            }
-
-            CreateAll();
-        }
-
-        /// <summary>
-        /// Batch-mode entry point: builds the level assets and catalog, builds the gameplay,
-        /// main menu and level select scenes, and merges them into the build settings.
-        /// Destructive: existing generated assets are deleted and replaced from the hard-coded
-        /// ASCII layouts. Development/bootstrap/test fixture only; do not use it to overwrite
-        /// final authored content.
-        /// </summary>
-        public static void CreateAll()
-        {
-            EnsureFolder("Assets/Sokoban", "Levels");
-            EnsureFolder("Assets/Sokoban", "Scenes");
-
-            CreateLevelAsset(Level01Path, "Level 01", Level01Rows);
-            CreateLevelAsset(Level02Path, "Level 02", Level02Rows);
-            CreateLevelAsset(Level03Path, "Level 03", Level03Rows);
-            CreateLevelAsset(Level04Path, "Level 04", Level04Rows);
-
-            // Creating a scene resets the asset pipeline, so every asset reference is reloaded from
-            // disk right before it is used instead of being kept across a scene switch.
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            LevelDefinition level01 = AssetDatabase.LoadAssetAtPath<LevelDefinition>(Level01Path);
-            LevelDefinition level02 = AssetDatabase.LoadAssetAtPath<LevelDefinition>(Level02Path);
-            LevelDefinition level03 = AssetDatabase.LoadAssetAtPath<LevelDefinition>(Level03Path);
-            LevelDefinition level04 = AssetDatabase.LoadAssetAtPath<LevelDefinition>(Level04Path);
-            CreateCatalogAsset(new[] { level01, level02, level03, level04 });
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-
-            // Creating a scene resets the asset pipeline; the persistent playtest request channel is
-            // re-wired into the regenerated gameplay scene so the one-click Playtest bridge keeps
-            // working after a content rebuild (guard against silently losing that reference).
-            EnsurePlaytestRequestAsset();
-
-            CreateGameplayScene(Level01Path, CatalogPath);
-            CreateMainMenuScene();
-            CreateLevelSelectScene(CatalogPath);
-
-            RegisterBuildSettings(MainMenuScenePath, LevelSelectScenePath, GameplayScenePath);
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            Debug.Log("LevelAssetFactory: created levels + catalog and scenes in " + ScenesFolder);
-        }
-
-        /// <summary>Creates the first shipped level asset (kept for existing callers).</summary>
-        public static LevelDefinition CreateSampleLevelAsset(string assetPath)
-        {
-            return CreateLevelAsset(assetPath, "Level 01", Level01Rows);
-        }
 
         /// <summary>Creates and saves a level asset from ASCII rows, returning the saved instance.</summary>
         public static LevelDefinition CreateLevelAsset(string assetPath, string levelName, string[] rows)

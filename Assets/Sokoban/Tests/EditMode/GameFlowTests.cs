@@ -104,19 +104,6 @@ namespace Sokoban.Tests
             return level;
         }
 
-        private static bool BoxAt(Board board, int x, int y)
-        {
-            foreach ((int bx, int by) in board.BoxPositions)
-            {
-                if (bx == x && by == y)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         [Test]
         public void ReconstructingBoard_FromSameDefinition_RestoresInitialStateAndZeroCounters()
         {
@@ -232,10 +219,45 @@ namespace Sokoban.Tests
             Assert.AreEqual(Level08Path, AssetDatabase.GetAssetPath(catalog.levels[7]), "Catalog entry 7 must be Level08.");
         }
 
-        [Test]
-        public void Level02_HasOnePlayerAndMatchingNonNullBoxGoalCounts()
+        /// <summary>
+        /// Designed shortest solution of every shipped level in catalog order, with its push count.
+        /// Each was found by an exhaustive shortest-move search when the level was authored. The
+        /// tests below replay it through the real <see cref="Board"/> and require the editor analyzer
+        /// to reach the same optimum, so a content edit that changes a level's difficulty fails here.
+        /// </summary>
+        private static readonly object[] ShippedSolutions =
         {
-            LevelDefinition level = LoadLevel(Level02Path);
+            new object[] { 1, "DDLDRRUUURR", 5 },
+            new object[] { 2, "LLLDDRRRRRRDLLLURRRRUULLLLLL", 7 },
+            new object[] { 3, "UULLULUURDDURRDDUURURDD", 7 },
+            new object[] { 4, "LUURRRRURDLLLUULDLDRRRRDRULLLDDLULURRRR", 17 },
+            new object[] { 5, "LDDRRURDLLLURRDRDDLDRRULUULURRURRDDLLULDDDRDLL", 16 },
+            new object[] { 6, "ULDLDRUUUULURDDRRRRDRUUDLLLUULLDDDDRRDLL", 14 },
+            new object[] { 7, "UUUUDRURUULDDULLLRRDRDDRUULURRRLLDDDLD", 16 },
+            new object[] { 8, "ULDRRRDRURRRDRULLLLLLLDDLULURRULULDDDURRRRRRLLUURDDDURRR", 21 }
+        };
+
+        private static string ShippedLevelPath(int slot)
+        {
+            return $"Assets/Sokoban/Levels/Level{slot:00}.asset";
+        }
+
+        private static Direction ParseDirection(char c)
+        {
+            switch (c)
+            {
+                case 'U': return Direction.Up;
+                case 'D': return Direction.Down;
+                case 'L': return Direction.Left;
+                case 'R': return Direction.Right;
+                default: throw new ArgumentException($"Unknown direction '{c}'.");
+            }
+        }
+
+        [Test]
+        public void ShippedLevel_HasOnePlayerAndMatchingBoxGoalCounts([NUnit.Framework.Range(1, 8)] int slot)
+        {
+            LevelDefinition level = LoadLevel(ShippedLevelPath(slot));
 
             int goals = 0;
             int boxes = 0;
@@ -258,43 +280,24 @@ namespace Sokoban.Tests
                 }
             }
 
-            Assert.AreEqual(1, players, "Level02 needs exactly one player.");
-            Assert.Greater(boxes, 0, "Level02 needs at least one box.");
-            Assert.AreEqual(goals, boxes, "Level02 needs boxes == goals.");
+            Assert.AreEqual(1, players, $"Level{slot:00} needs exactly one player.");
+            Assert.That(boxes, Is.InRange(2, 4), $"Level{slot:00} is designed with two to four boxes.");
+            Assert.AreEqual(goals, boxes, $"Level{slot:00} needs boxes == goals.");
+            Assert.IsEmpty(LevelValidator.ValidateDetailed(level), $"Level{slot:00} must have no validator errors or warnings.");
 
             var board = new Board(level);
-            Assert.IsFalse(board.IsComplete, "Level02 must not start already complete.");
+            Assert.IsFalse(board.IsComplete, $"Level{slot:00} must not start already complete.");
         }
 
-        [Test]
-        public void Level02_KnownSolutionSequence_CompletesLevel()
+        [TestCaseSource(nameof(ShippedSolutions))]
+        public void ShippedLevel_KnownSolution_Completes(int slot, string solution, int pushes)
         {
-            LevelDefinition level = LoadLevel(Level02Path);
-            var board = new Board(level);
-
-            // Push the left box up twice and left onto its goal, walk around the right side of the
-            // board, then push the remaining box up twice onto the second goal.
-            Direction[] solution =
-            {
-                Direction.Up,
-                Direction.Up,
-                Direction.Right,
-                Direction.Up,
-                Direction.Left,
-                Direction.Right,
-                Direction.Right,
-                Direction.Down,
-                Direction.Down,
-                Direction.Down,
-                Direction.Left,
-                Direction.Up,
-                Direction.Up
-            };
+            var board = new Board(LoadLevel(ShippedLevelPath(slot)));
 
             var rejected = new List<int>();
             for (int i = 0; i < solution.Length; i++)
             {
-                if (!board.TryMove(solution[i]))
+                if (!board.TryMove(ParseDirection(solution[i])))
                 {
                     rejected.Add(i);
                 }
@@ -302,416 +305,77 @@ namespace Sokoban.Tests
 
             Assert.IsEmpty(rejected, "Every solution move must be accepted; rejected indices: " + string.Join(",", rejected));
             Assert.AreEqual(solution.Length, board.MoveCount, "Move count must match the solution length.");
-            Assert.AreEqual(5, board.PushCount, "The solution pushes one box three times and the other twice.");
-            Assert.IsTrue(board.IsComplete, "Following the known solution must complete Level02.");
+            Assert.AreEqual(pushes, board.PushCount, $"Level{slot:00} solution push count.");
+            Assert.IsTrue(board.IsComplete, $"Following the known solution must complete Level{slot:00}.");
         }
 
-        [Test]
-        public void Level03_HasOnePlayerAndMatchingNonNullBoxGoalCounts()
+        [TestCaseSource(nameof(ShippedSolutions))]
+        public void ShippedLevel_AnalyzerFindsDesignedOptimum(int slot, string solution, int pushes)
         {
-            LevelDefinition level = LoadLevel(Level03Path);
+            AnalysisResult result = LevelAnalyzer.Analyze(LoadLevel(ShippedLevelPath(slot)));
 
-            int goals = 0;
-            int boxes = 0;
-            int players = 0;
+            Assert.AreEqual(AnalysisVerdict.Solvable, result.Verdict, $"Level{slot:00} must be analyzer-solvable: " + result.Detail);
+            Assert.AreEqual(solution.Length, result.SolutionMoves, $"Level{slot:00} shortest solution length. " + result.Detail);
+            Assert.AreEqual(pushes, result.SolutionPushes, $"Level{slot:00} shortest solution pushes. " + result.Detail);
+        }
 
-            for (int i = 0; i < level.cells.Count; i++)
+        /// <summary>
+        /// Every plate/door level must actually need its doors: with each door turned into a wall the
+        /// level becomes exhaustively unsolvable, so no door is decorative.
+        /// </summary>
+        [Test]
+        public void PlateDoorLevel_WithDoorsWalledOff_IsUnsolvable([NUnit.Framework.Range(5, 8)] int slot)
+        {
+            LevelDefinition level = UnityEngine.Object.Instantiate(LoadLevel(ShippedLevelPath(slot)));
+            try
             {
-                if (level.cells[i] == TileType.Goal)
+                int doors = 0;
+                for (int i = 0; i < level.cells.Count; i++)
                 {
-                    goals++;
+                    if (level.cells[i] == TileType.Door)
+                    {
+                        level.cells[i] = TileType.Wall;
+                        doors++;
+                    }
                 }
 
-                if (level.occupants[i] == OccupantType.Box)
-                {
-                    boxes++;
-                }
-                else if (level.occupants[i] == OccupantType.Player)
-                {
-                    players++;
-                }
+                Assert.Greater(doors, 0, $"Level{slot:00} is a plate/door level and must have a door.");
+
+                AnalysisResult result = LevelAnalyzer.Analyze(level);
+                Assert.AreEqual(AnalysisVerdict.Unsolvable, result.Verdict, $"Level{slot:00} must need its doors: " + result.Detail);
             }
-
-            Assert.AreEqual(1, players, "Level03 needs exactly one player.");
-            Assert.Greater(boxes, 0, "Level03 needs at least one box.");
-            Assert.AreEqual(goals, boxes, "Level03 needs boxes == goals.");
-
-            var board = new Board(level);
-            Assert.IsFalse(board.IsComplete, "Level03 must not start already complete.");
-        }
-
-        [Test]
-        public void Level03_KnownSolutionSequence_CompletesLevel()
-        {
-            LevelDefinition level = LoadLevel(Level03Path);
-            var board = new Board(level);
-
-            // Walk up over the lower goal, loop around the top, push one box down onto that goal,
-            // then cross the board and push the remaining box left onto the second goal.
-            Direction[] solution =
+            finally
             {
-                Direction.Up,
-                Direction.Up,
-                Direction.Left,
-                Direction.Up,
-                Direction.Up,
-                Direction.Right,
-                Direction.Down,
-                Direction.Up,
-                Direction.Right,
-                Direction.Right,
-                Direction.Down,
-                Direction.Left,
-                Direction.Left
-            };
-
-            var rejected = new List<int>();
-            for (int i = 0; i < solution.Length; i++)
-            {
-                if (!board.TryMove(solution[i]))
-                {
-                    rejected.Add(i);
-                }
+                UnityEngine.Object.DestroyImmediate(level);
             }
-
-            Assert.IsEmpty(rejected, "Every solution move must be accepted; rejected indices: " + string.Join(",", rejected));
-            Assert.AreEqual(solution.Length, board.MoveCount, "Move count must match the solution length.");
-            Assert.AreEqual(3, board.PushCount, "The Level03 solution pushes two boxes, one of them twice.");
-            Assert.IsTrue(board.IsComplete, "Following the known solution must complete Level03.");
         }
 
+        /// <summary>
+        /// Levels 07 and 08 use both plate/door groups, and the split matters: with every plate and
+        /// door merged into group A, each door needs every plate held at once and the level becomes
+        /// exhaustively unsolvable.
+        /// </summary>
         [Test]
-        public void Level04_HasOnePlayerAndMatchingNonNullBoxGoalCounts()
+        public void TwoGroupLevel_MergedIntoOneGroup_IsUnsolvable([Values(7, 8)] int slot)
         {
-            LevelDefinition level = LoadLevel(Level04Path);
-
-            int goals = 0;
-            int boxes = 0;
-            int players = 0;
-
-            for (int i = 0; i < level.cells.Count; i++)
+            LevelDefinition level = UnityEngine.Object.Instantiate(LoadLevel(ShippedLevelPath(slot)));
+            try
             {
-                if (level.cells[i] == TileType.Goal)
+                Assert.IsNotNull(level.groupIds, $"Level{slot:00} must author group ids.");
+                Assert.Contains(1, level.groupIds, $"Level{slot:00} must use group B.");
+
+                for (int i = 0; i < level.groupIds.Count; i++)
                 {
-                    goals++;
+                    level.groupIds[i] = 0;
                 }
 
-                if (level.occupants[i] == OccupantType.Box)
-                {
-                    boxes++;
-                }
-                else if (level.occupants[i] == OccupantType.Player)
-                {
-                    players++;
-                }
+                AnalysisResult result = LevelAnalyzer.Analyze(level);
+                Assert.AreEqual(AnalysisVerdict.Unsolvable, result.Verdict, $"Level{slot:00} must depend on its A/B split: " + result.Detail);
             }
-
-            Assert.AreEqual(1, players, "Level04 needs exactly one player.");
-            Assert.Greater(boxes, 0, "Level04 needs at least one box.");
-            Assert.AreEqual(goals, boxes, "Level04 needs boxes == goals.");
-
-            var board = new Board(level);
-            Assert.IsFalse(board.IsComplete, "Level04 must not start already complete.");
-        }
-
-        [Test]
-        public void Level04_KnownSolutionSequence_CompletesLevel()
-        {
-            LevelDefinition level = LoadLevel(Level04Path);
-            var board = new Board(level);
-
-            // Walk around the left of the internal wall band, push the left box up onto the top
-            // row, swing the player through the gap on the right and push both boxes onto goals.
-            Direction[] solution =
+            finally
             {
-                Direction.Up,
-                Direction.Left,
-                Direction.Left,
-                Direction.Up,
-                Direction.Up,
-                Direction.Right,
-                Direction.Right,
-                Direction.Up,
-                Direction.Right,
-                Direction.Down,
-                Direction.Right,
-                Direction.Up,
-                Direction.Left,
-                Direction.Up,
-                Direction.Left
-            };
-
-            var rejected = new List<int>();
-            for (int i = 0; i < solution.Length; i++)
-            {
-                if (!board.TryMove(solution[i]))
-                {
-                    rejected.Add(i);
-                }
+                UnityEngine.Object.DestroyImmediate(level);
             }
-
-            Assert.IsEmpty(rejected, "Every solution move must be accepted; rejected indices: " + string.Join(",", rejected));
-            Assert.AreEqual(solution.Length, board.MoveCount, "Move count must match the solution length.");
-            Assert.AreEqual(4, board.PushCount, "The Level04 solution pushes each box twice.");
-            Assert.IsTrue(board.IsComplete, "Following the known solution must complete Level04.");
-        }
-
-        [Test]
-        public void Level05_KnownSolution_Completes()
-        {
-            LevelDefinition level = LoadLevel(Level05Path);
-            var board = new Board(level);
-
-            // Push the upper box left onto the plate to hold the door open, cross the door corridor
-            // to push the lower box right onto its goal, then return and move the plate box onto the
-            // upper goal.
-            Direction[] solution =
-            {
-                Direction.Down,
-                Direction.Left,
-                Direction.Right,
-                Direction.Down,
-                Direction.Down,
-                Direction.Right,
-                Direction.Left,
-                Direction.Up,
-                Direction.Up,
-                Direction.Left,
-                Direction.Up,
-                Direction.Left,
-                Direction.Left,
-                Direction.Down,
-                Direction.Right,
-                Direction.Right
-            };
-
-            var rejected = new List<int>();
-            for (int i = 0; i < solution.Length; i++)
-            {
-                if (!board.TryMove(solution[i]))
-                {
-                    rejected.Add(i);
-                }
-            }
-
-            Assert.IsEmpty(rejected, "Every solution move must be accepted; rejected indices: " + string.Join(",", rejected));
-            Assert.AreEqual(solution.Length, board.MoveCount, "Move count must match the solution length.");
-            Assert.AreEqual(4, board.PushCount, "The Level05 solution pushes four times.");
-            Assert.IsTrue(board.IsComplete, "Following the known solution must complete Level05.");
-        }
-
-        [Test]
-        public void Level06_KnownSolution_Completes()
-        {
-            LevelDefinition level = LoadLevel(Level06Path);
-            var board = new Board(level);
-
-            // Plate errand up top, through the mid door, then the two-box planning room below.
-            Direction[] solution =
-            {
-                Direction.Down,
-                Direction.Down,
-                Direction.Right,
-                Direction.Up,
-                Direction.Down,
-                Direction.Right,
-                Direction.Right,
-                Direction.Right,
-                Direction.Right,
-                Direction.Right,
-                Direction.Left,
-                Direction.Up,
-                Direction.Left,
-                Direction.Left,
-                Direction.Left,
-                Direction.Left,
-                Direction.Left,
-                Direction.Up,
-                Direction.Right,
-                Direction.Right,
-                Direction.Right,
-                Direction.Right,
-                Direction.Right
-            };
-
-            var rejected = new List<int>();
-            for (int i = 0; i < solution.Length; i++)
-            {
-                if (!board.TryMove(solution[i]))
-                {
-                    rejected.Add(i);
-                }
-            }
-
-            Assert.IsEmpty(rejected, "Every solution move must be accepted; rejected indices: " + string.Join(",", rejected));
-            Assert.AreEqual(solution.Length, board.MoveCount, "Move count must match the solution length.");
-            Assert.AreEqual(8, board.PushCount, "The Level06 solution pushes eight times.");
-            Assert.IsTrue(board.IsComplete, "Following the known solution must complete Level06.");
-        }
-
-        [Test]
-        public void Level07_KnownSolution_Completes()
-        {
-            LevelDefinition level = LoadLevel(Level07Path);
-            var board = new Board(level);
-
-            // Park the upper box on the plate to hold the door open, push the lower box down through
-            // the door onto the lower goal, then walk back around and push the plate box right to the
-            // upper goal.
-            Direction[] solution =
-            {
-                Direction.Down,
-                Direction.Left,
-                Direction.Right,
-                Direction.Down,
-                Direction.Down,
-                Direction.Up,
-                Direction.Left,
-                Direction.Left,
-                Direction.Left,
-                Direction.Up,
-                Direction.Right,
-                Direction.Right,
-                Direction.Right
-            };
-
-            var rejected = new List<int>();
-            for (int i = 0; i < solution.Length; i++)
-            {
-                if (!board.TryMove(solution[i]))
-                {
-                    rejected.Add(i);
-                }
-            }
-
-            Assert.IsEmpty(rejected, "Every solution move must be accepted; rejected indices: " + string.Join(",", rejected));
-            Assert.AreEqual(solution.Length, board.MoveCount, "Move count must match the solution length.");
-            Assert.AreEqual(6, board.PushCount, "The Level07 solution pushes six times.");
-            Assert.IsTrue(board.IsComplete, "Following the known solution must complete Level07.");
-        }
-
-        [Test]
-        public void Level08_KnownSolution_Completes()
-        {
-            LevelDefinition level = LoadLevel(Level08Path);
-            var board = new Board(level);
-
-            // Walk around to arm the plate with the first box, cross the door, route the lower box
-            // right onto its goal, come back and push the plate box right onto the upper goal.
-            Direction[] solution =
-            {
-                Direction.Left,
-                Direction.Left,
-                Direction.Left,
-                Direction.Down,
-                Direction.Right,
-                Direction.Right,
-                Direction.Down,
-                Direction.Right,
-                Direction.Down,
-                Direction.Down,
-                Direction.Right,
-                Direction.Right,
-                Direction.Right,
-                Direction.Left,
-                Direction.Left,
-                Direction.Left,
-                Direction.Up,
-                Direction.Up,
-                Direction.Left,
-                Direction.Up,
-                Direction.Right,
-                Direction.Right
-            };
-
-            var rejected = new List<int>();
-            for (int i = 0; i < solution.Length; i++)
-            {
-                if (!board.TryMove(solution[i]))
-                {
-                    rejected.Add(i);
-                }
-            }
-
-            Assert.IsEmpty(rejected, "Every solution move must be accepted; rejected indices: " + string.Join(",", rejected));
-            Assert.AreEqual(solution.Length, board.MoveCount, "Move count must match the solution length.");
-            Assert.AreEqual(7, board.PushCount, "The Level08 solution pushes seven times.");
-            Assert.IsTrue(board.IsComplete, "Following the known solution must complete Level08.");
-        }
-
-        [Test]
-        public void Level05_And_Level06_AnalyzerSolvable()
-        {
-            LevelDefinition level05 = LoadLevel(Level05Path);
-            AnalysisResult result05 = LevelAnalyzer.Analyze(level05);
-            Assert.AreEqual(AnalysisVerdict.Solvable, result05.Verdict, "Level05 must be analyzer-solvable: " + result05.Detail);
-            Assert.AreEqual(16, result05.SolutionMoves, "Level05 shortest solution must be 16 moves. " + result05.Detail);
-            Assert.AreEqual(4, result05.SolutionPushes, "Level05 shortest solution must be 4 pushes. " + result05.Detail);
-
-            LevelDefinition level06 = LoadLevel(Level06Path);
-            AnalysisResult result06 = LevelAnalyzer.Analyze(level06);
-            Assert.AreEqual(AnalysisVerdict.Solvable, result06.Verdict, "Level06 must be analyzer-solvable: " + result06.Detail);
-            Assert.AreEqual(23, result06.SolutionMoves, "Level06 shortest solution must be 23 moves. " + result06.Detail);
-            Assert.AreEqual(8, result06.SolutionPushes, "Level06 shortest solution must be 8 pushes. " + result06.Detail);
-        }
-
-        [Test]
-        public void Level07_And_Level08_AnalyzerSolvable()
-        {
-            LevelDefinition level07 = LoadLevel(Level07Path);
-            AnalysisResult result07 = LevelAnalyzer.Analyze(level07);
-            Assert.AreEqual(AnalysisVerdict.Solvable, result07.Verdict, "Level07 must be analyzer-solvable: " + result07.Detail);
-            Assert.AreEqual(13, result07.SolutionMoves, "Level07 shortest solution must be 13 moves. " + result07.Detail);
-            Assert.AreEqual(6, result07.SolutionPushes, "Level07 shortest solution must be 6 pushes. " + result07.Detail);
-
-            LevelDefinition level08 = LoadLevel(Level08Path);
-            AnalysisResult result08 = LevelAnalyzer.Analyze(level08);
-            Assert.AreEqual(AnalysisVerdict.Solvable, result08.Verdict, "Level08 must be analyzer-solvable: " + result08.Detail);
-            Assert.AreEqual(22, result08.SolutionMoves, "Level08 shortest solution must be 22 moves. " + result08.Detail);
-            Assert.AreEqual(7, result08.SolutionPushes, "Level08 shortest solution must be 7 pushes. " + result08.Detail);
-        }
-
-        [Test]
-        public void Level05_PlateDoor_FirstDoorCrossing_IsOpenAndPlateHeld()
-        {
-            LevelDefinition level = LoadLevel(Level05Path);
-            AnalysisResult result = LevelAnalyzer.Analyze(level);
-            Assert.AreEqual(AnalysisVerdict.Solvable, result.Verdict, result.Detail);
-            Assert.IsNotNull(result.Solution, "A solvable result must carry a solution.");
-
-            int plateX = -1, plateY = -1;
-            for (int i = 0; i < level.cells.Count; i++)
-            {
-                if (level.cells[i] == TileType.Plate) { plateX = i % level.width; plateY = i / level.width; }
-            }
-            Assert.GreaterOrEqual(plateX, 0, "Level05 must have a plate tile.");
-
-            var board = new Board(level);
-            bool crossedDoor = false;
-            bool doorOpenAtCrossing = false;
-            bool plateHeldAtCrossing = false;
-
-            foreach (Direction direction in result.Solution)
-            {
-                (int dx, int dy) = direction.ToOffset();
-                (int px, int py) = board.PlayerPosition;
-                int targetX = px + dx;
-                int targetY = py + dy;
-
-                if (!crossedDoor && board.GetTile(targetX, targetY) == TileType.Door)
-                {
-                    crossedDoor = true;
-                    doorOpenAtCrossing = board.IsDoorOpen(targetX, targetY);
-                    plateHeldAtCrossing = BoxAt(board, plateX, plateY);
-                }
-
-                Assert.IsTrue(board.TryMove(direction), $"Replay move {direction} must be accepted.");
-            }
-
-            Assert.IsTrue(board.IsComplete, "Replaying the solution must complete Level05.");
-            Assert.IsTrue(crossedDoor, "The Level05 solution must cross the door cell.");
-            Assert.IsTrue(doorOpenAtCrossing, "The door must be open at the first crossing.");
-            Assert.IsTrue(plateHeldAtCrossing, "The plate must be held by a box at the first door crossing.");
         }
     }
 }

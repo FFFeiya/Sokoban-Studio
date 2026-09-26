@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Sokoban.Tests
 {
     /// <summary>
-    /// Covers M2 per-group door semantics in the runtime <see cref="Board"/>. Plates and doors only
+    /// Covers per-group door semantics in the runtime <see cref="Board"/>. Plates and doors only
     /// gate each other inside the same group id, and a door never closes onto an occupant. Every
     /// created <see cref="LevelDefinition"/> is destroyed in a finally block; a plain <see cref="Board"/>
     /// owns only primitive arrays and needs no destroy. Layouts come from

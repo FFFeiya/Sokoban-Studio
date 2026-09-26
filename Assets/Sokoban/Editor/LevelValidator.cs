@@ -5,7 +5,7 @@ using System.Linq;
 namespace Sokoban.Editor
 {
     /// <summary>
-    /// Authoring/playtest validation entry point for the P0 Sokoban level rules, shared by the
+    /// Authoring/playtest validation entry point for the Sokoban level rules, shared by the
     /// level editor and the one-click playtest so both agree on what "valid" means. It reports every
     /// problem it can find (with coordinates where applicable) and never throws for malformed input.
     /// <see cref="Board"/> independently enforces the runtime safety invariants when it is
@@ -15,7 +15,7 @@ namespace Sokoban.Editor
     {
         /// <summary>
         /// Validates <paramref name="level"/> and returns the list of <em>blocking</em> rule
-        /// violations. The list is empty exactly when the level is a playable P0 level. This is the
+        /// violations. The list is empty exactly when the level is a playable level. This is the
         /// error-only view used by Save and Playtest gating; advisory warnings are filtered out.
         /// </summary>
         public static List<string> Validate(LevelDefinition level)
@@ -163,7 +163,7 @@ namespace Sokoban.Editor
                     issues.Add(LevelIssue.Error($"箱子数量 ({boxes}) 必须等于目标数量 ({goals})。"));
                 }
 
-                // P1-1 static corner-deadlock hint: a box that is not already on a goal and has two
+                // Static corner-deadlock hint: a box that is not already on a goal and has two
                 // orthogonal neighbours that are each a wall or the level border can never be pushed
                 // out of that corner again, so the level cannot be completed with the current layout.
                 for (int i = 0; i < expected; i++)
@@ -190,7 +190,7 @@ namespace Sokoban.Editor
                     }
                 }
 
-                // P1-2 advisory hints, now per group: plates and doors only gate each other inside the
+                // Advisory door/plate hints, per group: plates and doors only gate each other inside the
                 // same group, so an unmatched door/plate group is flagged. These are designer hints
                 // only: the level can still be solved, so the wording must never claim it is unsolvable.
                 foreach (int group in firstDoorByGroup.Keys.OrderBy(g => g))

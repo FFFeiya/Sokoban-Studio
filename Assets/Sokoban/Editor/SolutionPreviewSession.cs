@@ -32,7 +32,7 @@ namespace Sokoban.Editor
 
         /// <summary>
         /// The detached in-memory clone the replay board is built from. Tests that construct a session
-        /// own this instance's lifetime and must destroy it (D015); it is never a shared asset.
+        /// own this instance's lifetime and must destroy it; it is never a shared asset.
         /// </summary>
         public LevelDefinition Clone => _clone;
 
